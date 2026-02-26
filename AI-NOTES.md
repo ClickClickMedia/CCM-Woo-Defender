@@ -1,5 +1,32 @@
 # AI Notes
 
+## 1.00.004 - 2026-02-27
+
+### Objective
+
+Provide a comprehensive, easy-to-understand explanation of exactly how Defender works and why it is effective against sporadic WooCommerce fraud attempts.
+
+### Implemented
+
+- Replaced vague admin header copy with clear behavior-focused wording.
+- Added an in-product explanation panel on the Overview tab covering:
+	- what signals are checked,
+	- how scoring decisions are made,
+	- how temporary blocking works,
+	- how failed/cancelled outcomes improve detection,
+	- why this outperforms basic rate limiting.
+- Expanded README with a dedicated plain-English section: “How and why it works”.
+
+### Why this approach
+
+- Store owners need confidence in protection decisions without reading source code.
+- Clear explanation reduces misconfiguration and support overhead.
+
+### Next ideas
+
+- Add per-signal live counters in Overview for transparency.
+- Add a simulation tool to preview score outcomes before changing settings.
+
 ## 1.00.003 - 2026-02-27
 
 ### Objective

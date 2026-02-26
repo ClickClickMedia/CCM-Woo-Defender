@@ -32,6 +32,28 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
   - secure reset of Defender data.
 - Settings are stored locally (no external APIs/libraries).
 
+## How and why it works (plain English)
+
+Most checkout attacks are no longer simple high-speed bursts. Attackers often place attempts slowly, changing names and addresses, to avoid normal rate limits.
+
+Defender handles this by combining multiple signals at the same time:
+
+- transaction pattern signals (same gateway + same amount + same country),
+- identity churn signals (many different emails/names/addresses around one stable payment pattern),
+- origin consistency signals (same IP or same device fingerprint rotating identities),
+- quality signals (fake/low-quality address patterns),
+- history signals (whether similar attempts were previously blocked).
+
+Each signal contributes to a risk score. If the score crosses the threshold, checkout is blocked before payment processing continues.
+
+After that, Defender temporarily blocks linked fingerprints (hashed tokens) so the same abuse pattern cannot keep retrying under slightly changed details.
+
+Defender also records failed/cancelled outcomes to improve future scoring against your real fraud behavior.
+
+Why this is effective: even when attempts are spread out over hours, fraud campaigns still reuse stable patterns (gateway, amount, device, network behavior). Defender targets those stable correlations rather than relying on speed alone.
+
+Privacy model: sensitive values are stored as HMAC hashes, not raw PII.
+
 ## Storage model
 
 Stored in `wp_options` with `autoload=false`:
