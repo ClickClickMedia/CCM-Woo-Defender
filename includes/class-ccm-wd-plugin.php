@@ -3,6 +3,7 @@
 defined( 'ABSPATH' ) || exit;
 
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-utils.php';
+require_once CCM_WD_PATH . 'includes/class-ccm-wd-settings.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-store.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-analyzer.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-checkout-guard.php';
@@ -12,6 +13,7 @@ class CCM_WD_Plugin {
     private static ?CCM_WD_Plugin $instance = null;
 
     private CCM_WD_Store $store;
+    private CCM_WD_Settings $settings;
     private CCM_WD_Analyzer $analyzer;
     private CCM_WD_Checkout_Guard $guard;
     private CCM_WD_Admin $admin;
@@ -40,9 +42,10 @@ class CCM_WD_Plugin {
         }
 
         $this->store    = new CCM_WD_Store();
-        $this->analyzer = new CCM_WD_Analyzer( $this->store );
-        $this->guard    = new CCM_WD_Checkout_Guard( $this->store, $this->analyzer );
-        $this->admin    = new CCM_WD_Admin( $this->store );
+        $this->settings = new CCM_WD_Settings();
+        $this->analyzer = new CCM_WD_Analyzer( $this->store, $this->settings );
+        $this->guard    = new CCM_WD_Checkout_Guard( $this->store, $this->settings, $this->analyzer );
+        $this->admin    = new CCM_WD_Admin( $this->store, $this->settings );
         $this->guard->register_hooks();
         $this->admin->register_hooks();
     }

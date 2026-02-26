@@ -4,10 +4,12 @@ defined( 'ABSPATH' ) || exit;
 
 class CCM_WD_Checkout_Guard {
     private CCM_WD_Store $store;
+    private CCM_WD_Settings $settings;
     private CCM_WD_Analyzer $analyzer;
 
-    public function __construct( CCM_WD_Store $store, CCM_WD_Analyzer $analyzer ) {
+    public function __construct( CCM_WD_Store $store, CCM_WD_Settings $settings, CCM_WD_Analyzer $analyzer ) {
         $this->store    = $store;
+        $this->settings = $settings;
         $this->analyzer = $analyzer;
     }
 
@@ -20,6 +22,12 @@ class CCM_WD_Checkout_Guard {
      * @param array<string, mixed> $data
      */
     public function validate_checkout( array $data, WP_Error $errors ): void {
+        $settings = $this->settings->get();
+
+        if ( empty( $settings['enabled'] ) ) {
+            return;
+        }
+
         if ( $errors->has_errors() ) {
             return;
         }
@@ -37,7 +45,8 @@ class CCM_WD_Checkout_Guard {
                 )
             );
 
-            $duration = (int) apply_filters( 'ccm_wd_block_duration', 7 * DAY_IN_SECONDS, $context, $evaluation );
+            $default_duration = (int) $settings['block_duration_hours'] * HOUR_IN_SECONDS;
+            $duration = (int) apply_filters( 'ccm_wd_block_duration', $default_duration, $context, $evaluation );
             $this->store->block_tokens( (array) ( $evaluation['matched_tokens'] ?? array() ), $duration );
         }
 

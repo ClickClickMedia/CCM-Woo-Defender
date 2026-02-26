@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.001`
+`1.00.002`
 
 ## What it does
 
@@ -22,11 +22,13 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
   - repeated attempts after prior blocks.
 - Blocks high-risk attempts before order processing and stores block tokens for future attempts.
 - Learns from failed/cancelled WooCommerce orders by feeding them back into the local model.
-- Adds a WooCommerce admin page (`WooCommerce > CCM Woo Defender`) for:
-  - tracked attempts,
-  - blocked attempts,
-  - active block token count,
+- Adds a WooCommerce admin page (`WooCommerce > CCM Woo Defender`) with an easy UI:
+  - Overview tab for live protection metrics,
+  - Settings tab for enable/disable, threshold, block duration, lookback window,
+  - editable signal weights and trigger thresholds,
+  - one-click reset to defaults,
   - secure reset of Defender data.
+- Settings are stored locally (no external APIs/libraries).
 
 ## Storage model
 
@@ -39,11 +41,11 @@ All sensitive fields are hashed with HMAC + WordPress salt before storage.
 
 ## Hooks / customization
 
-- `ccm_wd_block_threshold` (default `70`)
-- `ccm_wd_block_duration` (default `7 days`)
+- `ccm_wd_block_threshold` (default from settings, initially `70`)
+- `ccm_wd_block_duration` (default from settings, initially `168 hours`)
 - `ccm_wd_block_message` (checkout error text)
 
 ## Notes
 
-- This is a first iteration focused on pre-checkout abuse prevention with minimal overhead.
+- This iteration adds a guided settings UI for easier non-technical tuning.
 - It supports both HPOS and legacy posts-based order storage through WooCommerce APIs.

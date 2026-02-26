@@ -1,5 +1,35 @@
 # AI Notes
 
+## 1.00.002 - 2026-02-27
+
+### Objective
+
+Continue with an easy-to-use admin UI and appropriate, configurable protection settings.
+
+### Implemented
+
+- Added a dedicated settings model (`ccm_wd_settings`) with bounded sanitization and defaults.
+- Added Settings UI under WooCommerce > CCM Woo Defender:
+	- enable/disable protection,
+	- risk threshold,
+	- block duration,
+	- lookback window,
+	- per-signal score weights,
+	- per-signal trigger minimums.
+- Added save and reset-to-default flows with nonce/capability checks.
+- Added tabbed admin UX (`Overview`, `Settings`) for better usability.
+- Wired analyzer and checkout guard to use persisted settings.
+
+### Why this approach
+
+- Gives store teams direct control over strictness and false-positive balance without code changes.
+- Keeps plugin lightweight and local-only while improving operational usability.
+
+### Next ideas
+
+- Add quick presets (`Balanced`, `Strict`, `Lenient`) to simplify first-time setup.
+- Add short explanations beside each signal with examples.
+
 ## 1.00.001 - 2026-02-27
 
 ### Objective
