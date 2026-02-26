@@ -52,7 +52,7 @@ class CCM_WD_Store {
             $blocks = array();
         }
 
-        return $this->prune_blocks( $blocks );
+        return $this->prune_blocks( $blocks, false );
     }
 
     public function is_blocked_token( string $token ): bool {
@@ -80,7 +80,7 @@ class CCM_WD_Store {
             $blocks[ $token ] = $expires;
         }
 
-        update_option( self::OPTION_BLOCKS, $this->prune_blocks( $blocks ), false );
+        update_option( self::OPTION_BLOCKS, $this->prune_blocks( $blocks, true ), false );
     }
 
     public function clear_blocks(): void {
@@ -216,7 +216,7 @@ class CCM_WD_Store {
      * @param array<string, int> $blocks
      * @return array<string, int>
      */
-    private function prune_blocks( array $blocks ): array {
+    private function prune_blocks( array $blocks, bool $persist = false ): array {
         $now = CCM_WD_Utils::now();
 
         foreach ( $blocks as $token => $expires ) {
@@ -225,7 +225,9 @@ class CCM_WD_Store {
             }
         }
 
-        update_option( self::OPTION_BLOCKS, $blocks, false );
+        if ( $persist ) {
+            update_option( self::OPTION_BLOCKS, $blocks, false );
+        }
 
         return $blocks;
     }

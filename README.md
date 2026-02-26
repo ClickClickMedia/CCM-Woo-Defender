@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.012`
+`1.00.013`
 
 ## What it does
 
@@ -161,11 +161,12 @@ You can now manage a visible IP list in WooCommerce > CCM Woo Defender > Setting
 
 Enforcement detail:
 
-- Manual/force blocks are now enforced in both checkout hooks:
-  - `woocommerce_checkout_process` (early)
-  - `woocommerce_after_checkout_validation` (validation)
+- Manual/force blocks and risk-score blocking are enforced in **three** checkout hooks:
+  - `woocommerce_checkout_process` (classic, early)
+  - `woocommerce_after_checkout_validation` (classic, validation)
+  - `woocommerce_store_api_checkout_update_order_from_request` (block/Store API checkout)
 
-This improves reliability across checkout flows/themes.
+This ensures blocking works for both the classic (shortcode) checkout **and** the WooCommerce block-based checkout (default since WC 8.3).
 
 The Overview tab also shows:
 
@@ -185,3 +186,5 @@ This prints resolved client IP plus forwarding headers (`REMOTE_ADDR`, `HTTP_X_F
 
 - This iteration adds a guided Easy Setup plus optional Advanced Mode for power users.
 - It supports both HPOS and legacy posts-based order storage through WooCommerce APIs.
+- It supports both classic (shortcode) and block-based (Store API) WooCommerce checkout pages.
+- Ephemeral data (force-block, diagnostics, updater transients) is cleaned up on plugin deactivation.

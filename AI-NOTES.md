@@ -1,5 +1,37 @@
 # AI Notes
 
+## 1.00.013 - 2026-02-27
+
+### Objective
+
+Fix the critical issue where checkout blocking never fires on WooCommerce block-based (Store API) checkout pages, plus fix a false-positive scoring bug.
+
+### Bugs fixed
+
+1. **Block-based checkout completely unsupported (critical)** — The plugin only hooked into `woocommerce_checkout_process` and `woocommerce_after_checkout_validation`, which are classic (shortcode) checkout hooks. Modern WooCommerce (8.3+) defaults to block-based checkout routed through the Store API (`/wc/store/v1/checkout`). These hooks never fire for block checkout, so all blocking — manual IP, force-block, and risk-score — was silently bypassed.
+
+2. **`repeat_after_blocks` false positives (major)** — The `blocked_attempts_recent` metric in the analyzer counted ALL blocked events in the lookback window regardless of who was blocked. After a few legitimate fraud blocks, every subsequent checkout by any customer received +30 to their risk score from `repeat_after_blocks`, potentially causing false positives for legitimate buyers.
+
+3. **`prune_blocks()` wrote to DB during reads (minor)** — `get_blocks()` called `prune_blocks()` which always ran `update_option()` as a side-effect, even on read-only paths like `is_blocked_token()`.
+
+4. **No cleanup on plugin deactivation (minor)** — Ephemeral data (force-block, diagnostics, updater transients) was never cleaned up.
+
+### Implemented
+
+- Added `woocommerce_store_api_checkout_update_order_from_request` hook handler in checkout guard for block-based checkout.
+- New `store_api_checkout_guard()` method reads billing data from the `WC_Order` object (already populated by Store API) and performs manual IP check → force-block check → risk-score evaluation.
+- Blocks are thrown as `RouteException` (WC Store API native) so the block-checkout UI shows the error correctly.
+- New `build_context_from_order()` helper extracts scoring context from a `WC_Order` (vs `build_context()` which reads POST data for classic checkout).
+- Fixed `blocked_attempts_recent` to only count events matching the current visitor's IP, email, or UA hash.
+- `prune_blocks()` now accepts a `$persist` parameter; read paths pass `false` to avoid DB writes.
+- Added `register_deactivation_hook` to clean up force-block, last-request, and updater transients.
+
+### Why this approach
+
+- The Store API hook `woocommerce_store_api_checkout_update_order_from_request` fires after the order object is populated but before payment processing — the ideal point to validate and reject.
+- Using `RouteException` is the WooCommerce-documented way to surface errors in block checkout.
+- Per-visitor filtering of `blocked_attempts_recent` eliminates score inflation that could block innocent customers.
+
 ## 1.00.012 - 2026-02-27
 
 ### Objective

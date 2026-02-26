@@ -92,6 +92,10 @@ class CCM_WD_Analyzer {
         $same_ua_unique_emails       = array();
         $blocked_attempts_recent     = 0;
 
+        $ctx_ip      = (string) ( $context['ip_hash'] ?? '' );
+        $ctx_email   = (string) ( $context['email_hash'] ?? '' );
+        $ctx_ua      = (string) ( $context['ua_hash'] ?? '' );
+
         foreach ( $events as $event ) {
             $event_ip      = (string) ( $event['ip_hash'] ?? '' );
             $event_addr    = (string) ( $event['address_hash'] ?? '' );
@@ -121,8 +125,21 @@ class CCM_WD_Analyzer {
                 }
             }
 
+            // Only count blocks related to the current visitor (matched by IP, email, or UA).
             if ( $event_blocked ) {
-                ++$blocked_attempts_recent;
+                $matches_visitor = false;
+
+                if ( $ctx_ip !== '' && $event_ip === $ctx_ip ) {
+                    $matches_visitor = true;
+                } elseif ( $ctx_email !== '' && $event_email === $ctx_email ) {
+                    $matches_visitor = true;
+                } elseif ( $ctx_ua !== '' && $event_ua === $ctx_ua ) {
+                    $matches_visitor = true;
+                }
+
+                if ( $matches_visitor ) {
+                    ++$blocked_attempts_recent;
+                }
             }
         }
 

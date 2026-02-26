@@ -25,6 +25,23 @@ class CCM_WD_Plugin {
         }
     }
 
+    /**
+     * Clean up transients and ephemeral data on deactivation.
+     * Settings and event history are kept so re-activation restores the same state.
+     */
+    public static function on_deactivation(): void {
+        global $wpdb;
+
+        // Remove GitHub updater transients.
+        $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%ccm_wd_github_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+        // Remove force-block (ephemeral).
+        delete_option( 'ccm_wd_force_block_until' );
+
+        // Remove last-request diagnostics (ephemeral).
+        delete_option( 'ccm_wd_last_request' );
+    }
+
     private function __construct() {
         add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
         add_action( 'plugins_loaded', array( $this, 'init' ) );

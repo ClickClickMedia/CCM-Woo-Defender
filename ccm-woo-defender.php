@@ -2,7 +2,7 @@
 /**
  * Plugin Name: CCM Woo Defender
  * Description: Lightweight fraud defense for WooCommerce checkout attempts.
- * Version: 1.00.012
+ * Version: 1.00.013
  * Author: Click Click Media
  * Requires PHP: 8.1
  * Requires at least: 6.4
@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'CCM_WD_VERSION' ) ) {
-    define( 'CCM_WD_VERSION', '1.00.012' );
+    define( 'CCM_WD_VERSION', '1.00.013' );
 }
 
 if ( ! defined( 'CCM_WD_FILE' ) ) {
@@ -26,6 +26,8 @@ if ( ! defined( 'CCM_WD_PATH' ) ) {
 
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-plugin.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-updater.php';
+
+register_deactivation_hook( __FILE__, array( 'CCM_WD_Plugin', 'on_deactivation' ) );
 
 add_action(
     'plugins_loaded',
