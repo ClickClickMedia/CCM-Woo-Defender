@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.008`
+`1.00.009`
 
 ## What it does
 
@@ -104,6 +104,15 @@ Useful variants:
 
 - `wp ccm-wd simulate --attempts=8 --gateway=paypal --total=139.20 --clear-first=1`
 - `wp ccm-wd simulate --attempts=10 --gateway=stripe --ip=169.148.67.2 --country=AU`
+- `wp ccm-wd simulate --profile=strict --attempts=8`
+- `wp ccm-wd simulate --all-profiles=1 --attempts=8 --gateway=paypal --total=139.20`
+
+Profile behavior:
+
+- Default run uses your currently selected preset profile.
+- `--profile=<lenient|balanced|strict>` runs one preset temporarily for test purposes.
+- `--all-profiles=1` runs Lenient, Balanced, and Strict sequentially for side-by-side comparison.
+- During profile-based simulation, Advanced Mode overrides are temporarily bypassed so preset behavior is tested cleanly.
 
 Deprecation notice handling:
 

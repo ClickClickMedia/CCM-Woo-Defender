@@ -1,5 +1,23 @@
 # AI Notes
 
+## 1.00.009 - 2026-02-27
+
+### Objective
+
+Clarify and improve simulation mode coverage so users can test preset strictness levels directly.
+
+### Implemented
+
+- Added `--profile=<lenient|balanced|strict>` to run a specific preset in simulation.
+- Added `--all-profiles=1` to run Lenient, Balanced, and Strict in one command.
+- Simulation now restores original settings after completion.
+- Added README guidance for profile comparison workflow.
+
+### Why this approach
+
+- Makes it easy to answer “which mode is this testing?”
+- Enables quick confidence testing and false-positive tuning across all presets.
+
 ## 1.00.008 - 2026-02-27
 
 ### Objective
