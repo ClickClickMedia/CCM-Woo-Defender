@@ -6,6 +6,7 @@ class CCM_WD_Store {
     private const OPTION_EVENTS = 'ccm_wd_events';
     private const OPTION_BLOCKS = 'ccm_wd_blocks';
     private const OPTION_FORCE_BLOCK_UNTIL = 'ccm_wd_force_block_until';
+    private const OPTION_LAST_REQUEST      = 'ccm_wd_last_request';
     private const MAX_EVENTS    = 2500;
     private const RETENTION_SEC = 2592000;
 
@@ -119,6 +120,40 @@ class CCM_WD_Store {
     public function get_force_block_until(): int {
         $until = (int) get_option( self::OPTION_FORCE_BLOCK_UNTIL, 0 );
         return $until > 0 ? $until : 0;
+    }
+
+    /**
+     * @param array<string, string|int|bool> $context
+     */
+    public function set_last_request_context( array $context ): void {
+        $payload = array_merge(
+            array(
+                'ts'                  => CCM_WD_Utils::now(),
+                'resolved_client_ip'  => CCM_WD_Utils::get_client_ip(),
+                'remote_addr'         => (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ),
+                'http_x_forwarded_for'=> (string) ( $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '' ),
+                'http_cf_connecting_ip'=> (string) ( $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '' ),
+                'hook'                => '',
+                'blocked'             => false,
+                'reason'              => '',
+            ),
+            $context
+        );
+
+        update_option( self::OPTION_LAST_REQUEST, $payload, false );
+    }
+
+    /**
+     * @return array<string, string|int|bool>
+     */
+    public function get_last_request_context(): array {
+        $context = get_option( self::OPTION_LAST_REQUEST, array() );
+
+        if ( ! is_array( $context ) ) {
+            return array();
+        }
+
+        return $context;
     }
 
     /**

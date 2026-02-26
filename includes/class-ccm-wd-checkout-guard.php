@@ -6,6 +6,7 @@ class CCM_WD_Checkout_Guard {
     private CCM_WD_Store $store;
     private CCM_WD_Settings $settings;
     private CCM_WD_Analyzer $analyzer;
+    private bool $request_already_blocked = false;
 
     public function __construct( CCM_WD_Store $store, CCM_WD_Settings $settings, CCM_WD_Analyzer $analyzer ) {
         $this->store    = $store;
@@ -14,8 +15,69 @@ class CCM_WD_Checkout_Guard {
     }
 
     public function register_hooks(): void {
+        add_action( 'woocommerce_checkout_process', array( $this, 'checkout_process_guard' ), 5 );
         add_action( 'woocommerce_after_checkout_validation', array( $this, 'validate_checkout' ), 20, 2 );
         add_action( 'woocommerce_order_status_changed', array( $this, 'track_order_outcome' ), 20, 4 );
+    }
+
+    public function checkout_process_guard(): void {
+        $settings = $this->settings->get();
+
+        if ( empty( $settings['enabled'] ) ) {
+            return;
+        }
+
+        $client_ip = CCM_WD_Utils::get_client_ip();
+
+        if ( $this->settings->is_ip_manually_blocked( $client_ip ) ) {
+            wc_add_notice(
+                (string) apply_filters(
+                    'ccm_wd_block_message',
+                    __( 'Your transaction could not be processed. Please contact support if this is an error.', 'ccm-woo-defender' )
+                ),
+                'error'
+            );
+
+            $this->store->set_last_request_context(
+                array(
+                    'hook'    => 'woocommerce_checkout_process',
+                    'blocked' => true,
+                    'reason'  => 'manual_ip_block',
+                )
+            );
+
+            $this->request_already_blocked = true;
+            return;
+        }
+
+        if ( $this->store->is_force_block_active() ) {
+            wc_add_notice(
+                (string) apply_filters(
+                    'ccm_wd_block_message',
+                    __( 'Your transaction could not be processed. Please contact support if this is an error.', 'ccm-woo-defender' )
+                ),
+                'error'
+            );
+
+            $this->store->set_last_request_context(
+                array(
+                    'hook'    => 'woocommerce_checkout_process',
+                    'blocked' => true,
+                    'reason'  => 'force_block_active',
+                )
+            );
+
+            $this->request_already_blocked = true;
+            return;
+        }
+
+        $this->store->set_last_request_context(
+            array(
+                'hook'    => 'woocommerce_checkout_process',
+                'blocked' => false,
+                'reason'  => 'none',
+            )
+        );
     }
 
     /**
@@ -25,6 +87,10 @@ class CCM_WD_Checkout_Guard {
         $settings = $this->settings->get();
 
         if ( empty( $settings['enabled'] ) ) {
+            return;
+        }
+
+        if ( $this->request_already_blocked ) {
             return;
         }
 
@@ -55,6 +121,14 @@ class CCM_WD_Checkout_Guard {
                 )
             );
 
+            $this->store->set_last_request_context(
+                array(
+                    'hook'    => 'woocommerce_after_checkout_validation',
+                    'blocked' => true,
+                    'reason'  => 'manual_ip_block',
+                )
+            );
+
             return;
         }
 
@@ -77,6 +151,14 @@ class CCM_WD_Checkout_Guard {
                         'score'   => 999,
                         'reasons' => 'force_block_active',
                     )
+                )
+            );
+
+            $this->store->set_last_request_context(
+                array(
+                    'hook'    => 'woocommerce_after_checkout_validation',
+                    'blocked' => true,
+                    'reason'  => 'force_block_active',
                 )
             );
 
@@ -112,6 +194,14 @@ class CCM_WD_Checkout_Guard {
         );
 
         $this->store->add_event( $event );
+
+        $this->store->set_last_request_context(
+            array(
+                'hook'    => 'woocommerce_after_checkout_validation',
+                'blocked' => $is_blocked,
+                'reason'  => $is_blocked ? 'risk_score_block' : 'not_blocked',
+            )
+        );
     }
 
     /**

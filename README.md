@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.011`
+`1.00.012`
 
 ## What it does
 
@@ -159,10 +159,19 @@ You can now manage a visible IP list in WooCommerce > CCM Woo Defender > Setting
 - Format: one IP per line
 - Behavior: these IPs are hard-blocked before scoring logic runs
 
+Enforcement detail:
+
+- Manual/force blocks are now enforced in both checkout hooks:
+  - `woocommerce_checkout_process` (early)
+  - `woocommerce_after_checkout_validation` (validation)
+
+This improves reliability across checkout flows/themes.
+
 The Overview tab also shows:
 
 - Manual blocked IP count
 - The current configured IP list
+- Last observed checkout request diagnostics (hook, block reason, resolved IP, forwarded headers)
 
 ## Runtime IP diagnostics
 

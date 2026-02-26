@@ -120,6 +120,7 @@ class CCM_WD_Admin {
      */
     private function render_overview( array $stats, array $settings ): void {
         $manual_ips = $this->settings->get_manual_blocked_ips();
+        $last       = $this->store->get_last_request_context();
         ?>
         <table class="widefat striped" style="max-width: 760px; margin-top: 16px;">
             <tbody>
@@ -172,6 +173,25 @@ class CCM_WD_Admin {
                         <li><?php echo esc_html( $ip ); ?></li>
                     <?php endforeach; ?>
                 </ul>
+            <?php endif; ?>
+        </div>
+
+        <div style="margin-top: 12px; max-width: 760px;">
+            <strong><?php esc_html_e( 'Last observed checkout request', 'ccm-woo-defender' ); ?></strong>
+            <?php if ( empty( $last ) ) : ?>
+                <p><?php esc_html_e( 'No checkout request captured yet.', 'ccm-woo-defender' ); ?></p>
+            <?php else : ?>
+                <table class="widefat striped" style="margin-top:8px;">
+                    <tbody>
+                    <tr><th><?php esc_html_e( 'Hook', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['hook'] ?? '' ) ); ?></td></tr>
+                    <tr><th><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></th><td><?php echo ! empty( $last['blocked'] ) ? esc_html__( 'Yes', 'ccm-woo-defender' ) : esc_html__( 'No', 'ccm-woo-defender' ); ?></td></tr>
+                    <tr><th><?php esc_html_e( 'Reason', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['reason'] ?? '' ) ); ?></td></tr>
+                    <tr><th><?php esc_html_e( 'Resolved client IP', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['resolved_client_ip'] ?? '' ) ); ?></td></tr>
+                    <tr><th><?php esc_html_e( 'REMOTE_ADDR', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['remote_addr'] ?? '' ) ); ?></td></tr>
+                    <tr><th><?php esc_html_e( 'HTTP_X_FORWARDED_FOR', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['http_x_forwarded_for'] ?? '' ) ); ?></td></tr>
+                    <tr><th><?php esc_html_e( 'HTTP_CF_CONNECTING_IP', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['http_cf_connecting_ip'] ?? '' ) ); ?></td></tr>
+                    </tbody>
+                </table>
             <?php endif; ?>
         </div>
 

@@ -1,5 +1,27 @@
 # AI Notes
 
+## 1.00.012 - 2026-02-27
+
+### Objective
+
+Resolve cases where checkout still completes despite manual block expectations.
+
+### Implemented
+
+- Added early enforcement on `woocommerce_checkout_process` for manual IP and force-block checks.
+- Kept validation enforcement on `woocommerce_after_checkout_validation` for compatibility.
+- Added request-level diagnostics capture to store:
+	- resolved client IP,
+	- `REMOTE_ADDR`, `HTTP_X_FORWARDED_FOR`, `HTTP_CF_CONNECTING_IP`,
+	- hook name,
+	- blocked flag and reason.
+- Added “Last observed checkout request” panel in admin Overview.
+
+### Why this approach
+
+- Some checkout flows/themes can behave differently around validation timing.
+- Dual-hook enforcement + captured request diagnostics gives both stronger blocking reliability and fast root-cause visibility.
+
 ## 1.00.011 - 2026-02-27
 
 ### Objective
