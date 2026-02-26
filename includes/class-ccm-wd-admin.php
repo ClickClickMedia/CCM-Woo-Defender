@@ -13,6 +13,7 @@ class CCM_WD_Admin {
 
     public function register_hooks(): void {
         add_action( 'admin_menu', array( $this, 'register_menu' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_post_ccm_wd_save_settings', array( $this, 'handle_save_settings' ) );
         add_action( 'admin_post_ccm_wd_reset_settings', array( $this, 'handle_reset_settings' ) );
         add_action( 'admin_post_ccm_wd_clear_data', array( $this, 'handle_clear_data' ) );
@@ -26,6 +27,22 @@ class CCM_WD_Admin {
             'manage_woocommerce',
             'ccm-woo-defender',
             array( $this, 'render_page' )
+        );
+    }
+
+    /**
+     * Enqueue admin CSS on the plugin page only.
+     */
+    public function enqueue_admin_assets( string $hook ): void {
+        if ( 'woocommerce_page_ccm-woo-defender' !== $hook ) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'ccm-wd-admin',
+            plugin_dir_url( CCM_WD_FILE ) . 'css/ccm-wd-admin.css',
+            array(),
+            CCM_WD_VERSION
         );
     }
 
@@ -86,30 +103,39 @@ class CCM_WD_Admin {
             $selected_tab = 'overview';
         }
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e( 'CCM Woo Defender', 'ccm-woo-defender' ); ?></h1>
-            <p><?php esc_html_e( 'Defender stops repeated fake checkout attempts by combining multiple risk signals (not just rate limits), scoring each attempt, and blocking high-risk patterns before payment is processed.', 'ccm-woo-defender' ); ?></p>
+        <div class="wrap ccm-wd">
 
-            <?php if ( isset( $_GET['cleared'] ) ) : ?>
-                <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Defender events and blocks were cleared.', 'ccm-woo-defender' ); ?></p></div>
-            <?php endif; ?>
-            <?php if ( isset( $_GET['saved'] ) ) : ?>
-                <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Defender settings saved.', 'ccm-woo-defender' ); ?></p></div>
-            <?php endif; ?>
-            <?php if ( isset( $_GET['reset'] ) ) : ?>
-                <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Defender settings reset to defaults.', 'ccm-woo-defender' ); ?></p></div>
-            <?php endif; ?>
+            <div class="ccm-wd-header">
+                <div class="ccm-wd-header-brand">
+                    <h1><?php esc_html_e( 'CCM Woo Defender', 'ccm-woo-defender' ); ?></h1>
+                    <span class="ccm-wd-version">v<?php echo esc_html( CCM_WD_VERSION ); ?></span>
+                </div>
+                <div class="ccm-wd-tabs">
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview' ) ); ?>" class="ccm-wd-tab <?php echo 'overview' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Overview', 'ccm-woo-defender' ); ?></a>
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=settings' ) ); ?>" class="ccm-wd-tab <?php echo 'settings' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Settings', 'ccm-woo-defender' ); ?></a>
+                </div>
+            </div>
 
-            <nav class="nav-tab-wrapper">
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview' ) ); ?>" class="nav-tab <?php echo 'overview' === $selected_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Overview', 'ccm-woo-defender' ); ?></a>
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=settings' ) ); ?>" class="nav-tab <?php echo 'settings' === $selected_tab ? 'nav-tab-active' : ''; ?>"><?php esc_html_e( 'Settings', 'ccm-woo-defender' ); ?></a>
-            </nav>
+            <div class="ccm-wd-content">
 
-            <?php if ( 'overview' === $selected_tab ) : ?>
-                <?php $this->render_overview( $stats, $settings ); ?>
-            <?php else : ?>
-                <?php $this->render_settings( $settings ); ?>
-            <?php endif; ?>
+                <?php if ( isset( $_GET['cleared'] ) ) : ?>
+                    <div class="ccm-wd-alert ccm-wd-alert-success"><p><?php esc_html_e( 'Defender events and blocks were cleared.', 'ccm-woo-defender' ); ?></p></div>
+                <?php endif; ?>
+                <?php if ( isset( $_GET['saved'] ) ) : ?>
+                    <div class="ccm-wd-alert ccm-wd-alert-success"><p><?php esc_html_e( 'Settings saved successfully.', 'ccm-woo-defender' ); ?></p></div>
+                <?php endif; ?>
+                <?php if ( isset( $_GET['reset'] ) ) : ?>
+                    <div class="ccm-wd-alert ccm-wd-alert-success"><p><?php esc_html_e( 'Settings reset to defaults.', 'ccm-woo-defender' ); ?></p></div>
+                <?php endif; ?>
+
+                <?php if ( 'overview' === $selected_tab ) : ?>
+                    <?php $this->render_overview( $stats, $settings ); ?>
+                <?php else : ?>
+                    <?php $this->render_settings( $settings ); ?>
+                <?php endif; ?>
+
+            </div>
+
         </div>
         <?php
     }
@@ -122,97 +148,158 @@ class CCM_WD_Admin {
         $manual_ips = $this->settings->get_manual_blocked_ips();
         $last       = $this->store->get_last_request_context();
         ?>
-        <table class="widefat striped" style="max-width: 760px; margin-top: 16px;">
-            <tbody>
-            <tr>
-                <th><?php esc_html_e( 'Plugin version', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo esc_html( CCM_WD_VERSION ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Protection status', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo ! empty( $settings['enabled'] ) ? esc_html__( 'Enabled', 'ccm-woo-defender' ) : esc_html__( 'Disabled', 'ccm-woo-defender' ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Mode', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo ! empty( $settings['advanced_mode'] ) ? esc_html__( 'Advanced', 'ccm-woo-defender' ) : esc_html__( 'Easy', 'ccm-woo-defender' ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Preset profile', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo esc_html( ucfirst( (string) $settings['profile'] ) ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Tracked checkout attempts', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo esc_html( (string) $stats['events_total'] ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Blocked attempts', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo esc_html( (string) $stats['events_blocked'] ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Active block tokens', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo esc_html( (string) $stats['active_blocks'] ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Force block mode', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo ! empty( $stats['force_block_on'] ) ? esc_html__( 'Active', 'ccm-woo-defender' ) : esc_html__( 'Off', 'ccm-woo-defender' ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Manual blocked IPs', 'ccm-woo-defender' ); ?></th>
-                <td><?php echo esc_html( (string) count( $manual_ips ) ); ?></td>
-            </tr>
-            </tbody>
-        </table>
 
-        <div style="margin-top: 12px; max-width: 760px;">
-            <strong><?php esc_html_e( 'Manual blocked IP list', 'ccm-woo-defender' ); ?></strong>
-            <?php if ( empty( $manual_ips ) ) : ?>
-                <p><?php esc_html_e( 'No manual IPs configured.', 'ccm-woo-defender' ); ?></p>
-            <?php else : ?>
-                <ul style="margin-left: 18px;">
-                    <?php foreach ( $manual_ips as $ip ) : ?>
-                        <li><?php echo esc_html( $ip ); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
+        <!-- Stats Grid -->
+        <div class="ccm-wd-stats-grid">
+            <div class="ccm-wd-stat-box">
+                <span class="ccm-wd-stat-value"><?php echo esc_html( (string) $stats['events_total'] ); ?></span>
+                <span class="ccm-wd-stat-label"><?php esc_html_e( 'Checkout Attempts', 'ccm-woo-defender' ); ?></span>
+            </div>
+            <div class="ccm-wd-stat-box">
+                <span class="ccm-wd-stat-value"><?php echo esc_html( (string) $stats['events_blocked'] ); ?></span>
+                <span class="ccm-wd-stat-label"><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></span>
+            </div>
+            <div class="ccm-wd-stat-box">
+                <span class="ccm-wd-stat-value"><?php echo esc_html( (string) $stats['active_blocks'] ); ?></span>
+                <span class="ccm-wd-stat-label"><?php esc_html_e( 'Active Blocks', 'ccm-woo-defender' ); ?></span>
+            </div>
+            <div class="ccm-wd-stat-box">
+                <span class="ccm-wd-stat-value">
+                    <?php if ( ! empty( $stats['force_block_on'] ) ) : ?>
+                        <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Active', 'ccm-woo-defender' ); ?></span>
+                    <?php else : ?>
+                        <span class="ccm-wd-badge ccm-wd-badge-neutral"><?php esc_html_e( 'Off', 'ccm-woo-defender' ); ?></span>
+                    <?php endif; ?>
+                </span>
+                <span class="ccm-wd-stat-label"><?php esc_html_e( 'Force Block', 'ccm-woo-defender' ); ?></span>
+            </div>
         </div>
 
-        <div style="margin-top: 12px; max-width: 760px;">
-            <strong><?php esc_html_e( 'Last observed checkout request', 'ccm-woo-defender' ); ?></strong>
+        <!-- Status Details -->
+        <div class="ccm-wd-card">
+            <h2><?php esc_html_e( 'Status Details', 'ccm-woo-defender' ); ?></h2>
+            <table class="ccm-wd-table">
+                <tbody>
+                <tr>
+                    <th><?php esc_html_e( 'Protection', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <?php if ( ! empty( $settings['enabled'] ) ) : ?>
+                            <span class="ccm-wd-badge ccm-wd-badge-success"><?php esc_html_e( 'Enabled', 'ccm-woo-defender' ); ?></span>
+                        <?php else : ?>
+                            <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Disabled', 'ccm-woo-defender' ); ?></span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e( 'Mode', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <?php if ( ! empty( $settings['advanced_mode'] ) ) : ?>
+                            <span class="ccm-wd-badge ccm-wd-badge-warning"><?php esc_html_e( 'Advanced', 'ccm-woo-defender' ); ?></span>
+                        <?php else : ?>
+                            <span class="ccm-wd-badge ccm-wd-badge-info"><?php esc_html_e( 'Easy', 'ccm-woo-defender' ); ?></span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e( 'Preset Profile', 'ccm-woo-defender' ); ?></th>
+                    <td><span class="ccm-wd-badge ccm-wd-badge-neutral"><?php echo esc_html( ucfirst( (string) $settings['profile'] ) ); ?></span></td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e( 'Manual Blocked IPs', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <?php if ( empty( $manual_ips ) ) : ?>
+                            <span class="ccm-wd-text-muted"><?php esc_html_e( 'None configured', 'ccm-woo-defender' ); ?></span>
+                        <?php else : ?>
+                            <strong><?php echo esc_html( (string) count( $manual_ips ) ); ?></strong>
+                            <ul class="ccm-wd-ip-list">
+                                <?php foreach ( $manual_ips as $ip ) : ?>
+                                    <li><?php echo esc_html( $ip ); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Last Checkout Request -->
+        <div class="ccm-wd-card">
+            <h2><?php esc_html_e( 'Last Checkout Request', 'ccm-woo-defender' ); ?></h2>
             <?php if ( empty( $last ) ) : ?>
-                <p><?php esc_html_e( 'No checkout request captured yet.', 'ccm-woo-defender' ); ?></p>
+                <p class="ccm-wd-text-muted"><?php esc_html_e( 'No checkout request captured yet.', 'ccm-woo-defender' ); ?></p>
             <?php else : ?>
-                <table class="widefat striped" style="margin-top:8px;">
+                <table class="ccm-wd-table">
                     <tbody>
-                    <tr><th><?php esc_html_e( 'Hook', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['hook'] ?? '' ) ); ?></td></tr>
-                    <tr><th><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></th><td><?php echo ! empty( $last['blocked'] ) ? esc_html__( 'Yes', 'ccm-woo-defender' ) : esc_html__( 'No', 'ccm-woo-defender' ); ?></td></tr>
-                    <tr><th><?php esc_html_e( 'Reason', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['reason'] ?? '' ) ); ?></td></tr>
-                    <tr><th><?php esc_html_e( 'Resolved client IP', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['resolved_client_ip'] ?? '' ) ); ?></td></tr>
-                    <tr><th><?php esc_html_e( 'REMOTE_ADDR', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['remote_addr'] ?? '' ) ); ?></td></tr>
-                    <tr><th><?php esc_html_e( 'HTTP_X_FORWARDED_FOR', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['http_x_forwarded_for'] ?? '' ) ); ?></td></tr>
-                    <tr><th><?php esc_html_e( 'HTTP_CF_CONNECTING_IP', 'ccm-woo-defender' ); ?></th><td><?php echo esc_html( (string) ( $last['http_cf_connecting_ip'] ?? '' ) ); ?></td></tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Hook', 'ccm-woo-defender' ); ?></th>
+                        <td><?php echo esc_html( (string) ( $last['hook'] ?? '' ) ); ?></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></th>
+                        <td>
+                            <?php if ( ! empty( $last['blocked'] ) ) : ?>
+                                <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Yes', 'ccm-woo-defender' ); ?></span>
+                            <?php else : ?>
+                                <span class="ccm-wd-badge ccm-wd-badge-success"><?php esc_html_e( 'No', 'ccm-woo-defender' ); ?></span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Reason', 'ccm-woo-defender' ); ?></th>
+                        <td><?php echo esc_html( (string) ( $last['reason'] ?? '' ) ); ?></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Resolved Client IP', 'ccm-woo-defender' ); ?></th>
+                        <td><code><?php echo esc_html( (string) ( $last['resolved_client_ip'] ?? '' ) ); ?></code></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'REMOTE_ADDR', 'ccm-woo-defender' ); ?></th>
+                        <td><code><?php echo esc_html( (string) ( $last['remote_addr'] ?? '' ) ); ?></code></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'X-Forwarded-For', 'ccm-woo-defender' ); ?></th>
+                        <td><code><?php echo esc_html( (string) ( $last['http_x_forwarded_for'] ?? '' ) ); ?></code></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'CF-Connecting-IP', 'ccm-woo-defender' ); ?></th>
+                        <td><code><?php echo esc_html( (string) ( $last['http_cf_connecting_ip'] ?? '' ) ); ?></code></td>
+                    </tr>
                     </tbody>
                 </table>
             <?php endif; ?>
         </div>
 
-        <div class="notice notice-info" style="margin-top: 16px; max-width: 960px;">
-            <p><strong><?php esc_html_e( 'How Defender works (simple version):', 'ccm-woo-defender' ); ?></strong></p>
-            <ol style="margin-left: 18px;">
-                <li><?php esc_html_e( 'At checkout, Defender creates a privacy-safe fingerprint from non-sensitive patterns such as payment method, amount, country, IP/device consistency, and address quality. Raw personal data is not stored.', 'ccm-woo-defender' ); ?></li>
-                <li><?php esc_html_e( 'It compares this attempt with recent checkout history to detect fraud-style behavior, for example: same gateway + same amount with many different identities, same IP with multiple addresses, or repeated attempts after previous blocks.', 'ccm-woo-defender' ); ?></li>
-                <li><?php esc_html_e( 'Each signal adds to a risk score. If the score reaches your configured threshold, checkout is stopped immediately and related fingerprints are temporarily blocked.', 'ccm-woo-defender' ); ?></li>
-                <li><?php esc_html_e( 'Defender also learns from failed and cancelled orders, so detection becomes more accurate over time for your store’s specific abuse patterns.', 'ccm-woo-defender' ); ?></li>
-            </ol>
-            <p><strong><?php esc_html_e( 'Why this works better than basic rate limiting:', 'ccm-woo-defender' ); ?></strong> <?php esc_html_e( 'Many attackers deliberately spread attempts over time to bypass burst limits. Defender focuses on correlated fraud fingerprints and identity churn, which remain visible even when attempts are sporadic.', 'ccm-woo-defender' ); ?></p>
+        <!-- How Defender Works -->
+        <div class="ccm-wd-card">
+            <h2><?php esc_html_e( 'How Defender Works', 'ccm-woo-defender' ); ?></h2>
+            <div class="ccm-wd-alert ccm-wd-alert-info">
+                <div>
+                    <p><strong><?php esc_html_e( 'Simple version:', 'ccm-woo-defender' ); ?></strong></p>
+                    <ol>
+                        <li><?php esc_html_e( 'At checkout, Defender creates a privacy-safe fingerprint from non-sensitive patterns such as payment method, amount, country, IP/device consistency, and address quality. Raw personal data is not stored.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'It compares this attempt with recent checkout history to detect fraud-style behavior, for example: same gateway + same amount with many different identities, same IP with multiple addresses, or repeated attempts after previous blocks.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'Each signal adds to a risk score. If the score reaches your configured threshold, checkout is stopped immediately and related fingerprints are temporarily blocked.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'Defender also learns from failed and cancelled orders, so detection improves over time for your specific abuse patterns.', 'ccm-woo-defender' ); ?></li>
+                    </ol>
+                    <p><strong><?php esc_html_e( 'Why this works better than basic rate limiting:', 'ccm-woo-defender' ); ?></strong> <?php esc_html_e( 'Many attackers deliberately spread attempts over time to bypass burst limits. Defender focuses on correlated fraud fingerprints and identity churn, which remain visible even when attempts are sporadic.', 'ccm-woo-defender' ); ?></p>
+                </div>
+            </div>
+            <p class="ccm-wd-text-muted"><?php esc_html_e( 'Tip: Keep protection enabled and tune threshold/weights in Settings to reduce false positives.', 'ccm-woo-defender' ); ?></p>
         </div>
 
-        <p style="margin-top: 12px;"><?php esc_html_e( 'Tip: Keep protection enabled and tune threshold/weights in Settings to reduce false positives.', 'ccm-woo-defender' ); ?></p>
-
-        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top: 8px;">
-            <input type="hidden" name="action" value="ccm_wd_clear_data" />
-            <?php wp_nonce_field( 'ccm_wd_clear_data' ); ?>
-            <?php submit_button( __( 'Clear Defender Data', 'ccm-woo-defender' ), 'delete' ); ?>
-        </form>
+        <!-- Data Management -->
+        <div class="ccm-wd-card">
+            <h2><?php esc_html_e( 'Data Management', 'ccm-woo-defender' ); ?></h2>
+            <p><?php esc_html_e( 'Clear all tracked checkout events and active block tokens. This cannot be undone.', 'ccm-woo-defender' ); ?></p>
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <input type="hidden" name="action" value="ccm_wd_clear_data" />
+                <?php wp_nonce_field( 'ccm_wd_clear_data' ); ?>
+                <button type="submit" class="ccm-wd-button ccm-wd-button-danger" onclick="return confirm('<?php echo esc_js( __( 'Clear all Defender data? This cannot be undone.', 'ccm-woo-defender' ) ); ?>');">
+                    <?php esc_html_e( 'Clear Defender Data', 'ccm-woo-defender' ); ?>
+                </button>
+            </form>
+        </div>
         <?php
     }
 
@@ -222,133 +309,181 @@ class CCM_WD_Admin {
     private function render_settings( array $settings ): void {
         $profiles = $this->settings->get_profile_labels();
         ?>
-        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top: 16px; max-width: 860px;">
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="ccm_wd_save_settings" />
             <?php wp_nonce_field( 'ccm_wd_save_settings' ); ?>
 
-            <h2><?php esc_html_e( 'Easy Setup', 'ccm-woo-defender' ); ?></h2>
-            <p class="description"><?php esc_html_e( 'Start here: choose a preset and save. Most stores should use Balanced.', 'ccm-woo-defender' ); ?></p>
+            <!-- Easy Setup Card -->
+            <div class="ccm-wd-card">
+                <h2><?php esc_html_e( 'Easy Setup', 'ccm-woo-defender' ); ?></h2>
+                <p><?php esc_html_e( 'Start here: choose a preset and save. Most stores should use Balanced.', 'ccm-woo-defender' ); ?></p>
 
-            <table class="widefat striped">
-                <tbody>
-                <tr>
-                    <th><?php esc_html_e( 'Enable protection', 'ccm-woo-defender' ); ?></th>
-                    <td>
-                        <label>
+                <!-- Enable Protection -->
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Enable Protection', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'Block high-risk checkout attempts automatically.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <label class="ccm-wd-toggle">
                             <input type="checkbox" name="ccm_wd_settings[enabled]" value="1" <?php checked( ! empty( $settings['enabled'] ) ); ?> />
-                            <?php esc_html_e( 'Block high-risk checkout attempts', 'ccm-woo-defender' ); ?>
+                            <span class="ccm-wd-toggle-slider"></span>
                         </label>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Protection preset', 'ccm-woo-defender' ); ?></th>
-                    <td>
-                        <select name="ccm_wd_settings[profile]">
+                    </div>
+                </div>
+
+                <!-- Protection Preset -->
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Protection Preset', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'Balanced is recommended for most stores.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <select name="ccm_wd_settings[profile]" class="ccm-wd-select">
                             <?php foreach ( $profiles as $value => $label ) : ?>
                                 <option value="<?php echo esc_attr( $value ); ?>" <?php selected( (string) $settings['profile'], $value ); ?>><?php echo esc_html( $label ); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="description"><?php esc_html_e( 'Balanced is recommended for most stores.', 'ccm-woo-defender' ); ?></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Block duration (hours)', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="1" max="720" name="ccm_wd_settings[block_duration_hours]" value="<?php echo esc_attr( (string) $settings['block_duration_hours'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Detection window (hours)', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="1" max="168" name="ccm_wd_settings[lookback_hours]" value="<?php echo esc_attr( (string) $settings['lookback_hours'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Advanced mode', 'ccm-woo-defender' ); ?></th>
-                    <td>
-                        <label>
+                    </div>
+                </div>
+
+                <!-- Block Duration -->
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Block Duration (hours)', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'How long a blocked fingerprint stays blocked.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="1" max="720" name="ccm_wd_settings[block_duration_hours]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['block_duration_hours'] ); ?>" />
+                    </div>
+                </div>
+
+                <!-- Detection Window -->
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Detection Window (hours)', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'How far back to look for related checkout attempts.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="1" max="168" name="ccm_wd_settings[lookback_hours]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['lookback_hours'] ); ?>" />
+                    </div>
+                </div>
+
+                <!-- Advanced Mode -->
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Advanced Mode', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'Enable expert controls for weights and trigger thresholds.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <label class="ccm-wd-toggle">
                             <input type="checkbox" name="ccm_wd_settings[advanced_mode]" value="1" <?php checked( ! empty( $settings['advanced_mode'] ) ); ?> />
-                            <?php esc_html_e( 'Enable expert controls (weights and trigger thresholds)', 'ccm-woo-defender' ); ?>
+                            <span class="ccm-wd-toggle-slider"></span>
                         </label>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Manual blocked IP list', 'ccm-woo-defender' ); ?></th>
-                    <td>
-                        <textarea name="ccm_wd_settings[manual_blocked_ips]" rows="6" style="width:100%; max-width:420px;"><?php echo esc_textarea( (string) ( $settings['manual_blocked_ips'] ?? '' ) ); ?></textarea>
-                        <p class="description"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses are always blocked at checkout before scoring.', 'ccm-woo-defender' ); ?></p>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                    </div>
+                </div>
+
+                <!-- Manual Blocked IPs -->
+                <div class="ccm-wd-setting-row" style="flex-direction: column;">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Manual Blocked IP List', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses are always blocked at checkout before scoring.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <textarea name="ccm_wd_settings[manual_blocked_ips]" rows="5" class="ccm-wd-textarea"><?php echo esc_textarea( (string) ( $settings['manual_blocked_ips'] ?? '' ) ); ?></textarea>
+                </div>
+            </div>
 
             <?php if ( ! empty( $settings['advanced_mode'] ) ) : ?>
-            <h2 style="margin-top: 18px;"><?php esc_html_e( 'Advanced Detection Controls', 'ccm-woo-defender' ); ?></h2>
-            <p class="description"><?php esc_html_e( 'These values override preset defaults. Lower thresholds and higher weights increase strictness.', 'ccm-woo-defender' ); ?></p>
-            <table class="widefat striped" style="margin-top: 8px;">
-                <tbody>
-                <tr>
-                    <th><?php esc_html_e( 'Risk threshold', 'ccm-woo-defender' ); ?></th>
-                    <td>
-                        <input type="number" min="20" max="200" name="ccm_wd_settings[threshold]" value="<?php echo esc_attr( (string) $settings['threshold'] ); ?>" />
-                        <p class="description"><?php esc_html_e( 'Lower = stricter. Recommended range: 60 to 90.', 'ccm-woo-defender' ); ?></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Suspicious address weight', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_suspicious_address]" value="<?php echo esc_attr( (string) $settings['weight_suspicious_address'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Gateway + amount identity churn weight', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_payment_identity_churn]" value="<?php echo esc_attr( (string) $settings['weight_payment_identity_churn'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Same IP identity churn weight', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_ip_identity_churn]" value="<?php echo esc_attr( (string) $settings['weight_ip_identity_churn'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Same device identity churn weight', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_device_identity_churn]" value="<?php echo esc_attr( (string) $settings['weight_device_identity_churn'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Repeat-after-blocks weight', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_repeat_after_blocks]" value="<?php echo esc_attr( (string) $settings['weight_repeat_after_blocks'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Gateway + amount min attempts', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="2" max="30" name="ccm_wd_settings[payment_identity_min_attempts]" value="<?php echo esc_attr( (string) $settings['payment_identity_min_attempts'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Gateway + amount min unique emails', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="2" max="20" name="ccm_wd_settings[payment_identity_min_unique_emails]" value="<?php echo esc_attr( (string) $settings['payment_identity_min_unique_emails'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Same IP min attempts', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="2" max="30" name="ccm_wd_settings[ip_identity_min_attempts]" value="<?php echo esc_attr( (string) $settings['ip_identity_min_attempts'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Same IP min unique addresses', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="2" max="20" name="ccm_wd_settings[ip_identity_min_unique_addresses]" value="<?php echo esc_attr( (string) $settings['ip_identity_min_unique_addresses'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Same device min attempts', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="2" max="30" name="ccm_wd_settings[device_identity_min_attempts]" value="<?php echo esc_attr( (string) $settings['device_identity_min_attempts'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Same device min unique emails', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="2" max="20" name="ccm_wd_settings[device_identity_min_unique_emails]" value="<?php echo esc_attr( (string) $settings['device_identity_min_unique_emails'] ); ?>" /></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Repeat-after-blocks min attempts', 'ccm-woo-defender' ); ?></th>
-                    <td><input type="number" min="1" max="20" name="ccm_wd_settings[repeat_after_blocks_min_attempts]" value="<?php echo esc_attr( (string) $settings['repeat_after_blocks_min_attempts'] ); ?>" /></td>
-                </tr>
-                </tbody>
-            </table>
+            <!-- Advanced Detection Controls Card -->
+            <div class="ccm-wd-card">
+                <h2><?php esc_html_e( 'Advanced Detection Controls', 'ccm-woo-defender' ); ?></h2>
+                <p><?php esc_html_e( 'These values override preset defaults. Lower thresholds and higher weights increase strictness.', 'ccm-woo-defender' ); ?></p>
+
+                <h3><?php esc_html_e( 'Risk Threshold', 'ccm-woo-defender' ); ?></h3>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Risk Threshold', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'Lower = stricter. Recommended range: 60 to 90.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="20" max="200" name="ccm_wd_settings[threshold]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['threshold'] ); ?>" />
+                    </div>
+                </div>
+
+                <h3><?php esc_html_e( 'Signal Weights', 'ccm-woo-defender' ); ?></h3>
+                <table class="ccm-wd-form-table">
+                    <tr>
+                        <th><?php esc_html_e( 'Suspicious address', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_suspicious_address]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_suspicious_address'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Gateway + amount identity churn', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_payment_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_payment_identity_churn'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Same IP identity churn', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_ip_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_ip_identity_churn'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Same device identity churn', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_device_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_device_identity_churn'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Repeat-after-blocks', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_repeat_after_blocks]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_repeat_after_blocks'] ); ?>" /></td>
+                    </tr>
+                </table>
+
+                <h3><?php esc_html_e( 'Trigger Thresholds', 'ccm-woo-defender' ); ?></h3>
+                <table class="ccm-wd-form-table">
+                    <tr>
+                        <th><?php esc_html_e( 'Gateway + amount min attempts', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="2" max="30" name="ccm_wd_settings[payment_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['payment_identity_min_attempts'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Gateway + amount min unique emails', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="2" max="20" name="ccm_wd_settings[payment_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['payment_identity_min_unique_emails'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Same IP min attempts', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="2" max="30" name="ccm_wd_settings[ip_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_attempts'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Same IP min unique addresses', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="2" max="20" name="ccm_wd_settings[ip_identity_min_unique_addresses]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_unique_addresses'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Same device min attempts', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="2" max="30" name="ccm_wd_settings[device_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_attempts'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Same device min unique emails', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="2" max="20" name="ccm_wd_settings[device_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_unique_emails'] ); ?>" /></td>
+                    </tr>
+                    <tr>
+                        <th><?php esc_html_e( 'Repeat-after-blocks min attempts', 'ccm-woo-defender' ); ?></th>
+                        <td><input type="number" min="1" max="20" name="ccm_wd_settings[repeat_after_blocks_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['repeat_after_blocks_min_attempts'] ); ?>" /></td>
+                    </tr>
+                </table>
+            </div>
             <?php endif; ?>
 
-            <?php submit_button( __( 'Save Settings', 'ccm-woo-defender' ) ); ?>
+            <!-- Save / Reset Buttons -->
+            <div class="ccm-wd-card">
+                <div class="ccm-wd-form-actions" style="border-top: none; margin-top: 0; padding-top: 0;">
+                    <button type="submit" class="ccm-wd-button"><?php esc_html_e( 'Save Settings', 'ccm-woo-defender' ); ?></button>
+                </div>
+            </div>
         </form>
 
-        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top: 8px; max-width: 860px;">
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
             <input type="hidden" name="action" value="ccm_wd_reset_settings" />
             <?php wp_nonce_field( 'ccm_wd_reset_settings' ); ?>
-            <?php submit_button( __( 'Reset Settings to Defaults', 'ccm-woo-defender' ), 'secondary' ); ?>
+            <div style="margin-top: -1rem;">
+                <button type="submit" class="ccm-wd-button ccm-wd-button-secondary" onclick="return confirm('<?php echo esc_js( __( 'Reset all settings to defaults?', 'ccm-woo-defender' ) ); ?>');">
+                    <?php esc_html_e( 'Reset Settings to Defaults', 'ccm-woo-defender' ); ?>
+                </button>
+            </div>
         </form>
         <?php
     }

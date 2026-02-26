@@ -1,0 +1,796 @@
+/**
+ * CCM Woo Defender – Admin UI
+ *
+ * Design system aligned with CCM-Tools for consistent branding.
+ */
+
+/* ===================================
+   Design Tokens
+   =================================== */
+:root {
+	/* Brand */
+	--ccm-wd-primary: #3b82f6;
+	--ccm-wd-primary-hover: #2563eb;
+	--ccm-wd-primary-light: #eff6ff;
+	--ccm-wd-secondary: #64748b;
+	--ccm-wd-accent: #8b5cf6;
+
+	/* Status */
+	--ccm-wd-success: #22c55e;
+	--ccm-wd-success-bg: #f0fdf4;
+	--ccm-wd-warning: #f59e0b;
+	--ccm-wd-warning-bg: #fffbeb;
+	--ccm-wd-error: #ef4444;
+	--ccm-wd-error-bg: #fef2f2;
+	--ccm-wd-info: #06b6d4;
+	--ccm-wd-info-bg: #ecfeff;
+
+	/* Neutrals */
+	--ccm-wd-bg: #f8fafc;
+	--ccm-wd-bg-dark: #0f172a;
+	--ccm-wd-surface: #ffffff;
+	--ccm-wd-border: #e2e8f0;
+
+	/* Text */
+	--ccm-wd-text: #1e293b;
+	--ccm-wd-text-muted: #64748b;
+	--ccm-wd-text-light: #94a3b8;
+	--ccm-wd-text-inverse: #f8fafc;
+
+	/* Spacing */
+	--ccm-wd-space-xs: 0.25rem;
+	--ccm-wd-space-sm: 0.5rem;
+	--ccm-wd-space-md: 1rem;
+	--ccm-wd-space-lg: 1.5rem;
+	--ccm-wd-space-xl: 2rem;
+
+	/* Radius */
+	--ccm-wd-radius-sm: 0.375rem;
+	--ccm-wd-radius-md: 0.5rem;
+	--ccm-wd-radius-lg: 0.75rem;
+	--ccm-wd-radius-xl: 1rem;
+	--ccm-wd-radius-full: 9999px;
+
+	/* Shadows */
+	--ccm-wd-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	--ccm-wd-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+	--ccm-wd-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+	--ccm-wd-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+	/* Transitions */
+	--ccm-wd-transition-fast: 150ms ease;
+	--ccm-wd-transition: 200ms ease;
+
+	/* Typography */
+	--ccm-wd-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--ccm-wd-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+	/* Font Sizes */
+	--ccm-wd-text-xs: 0.75rem;
+	--ccm-wd-text-sm: 0.875rem;
+	--ccm-wd-text-base: 1rem;
+	--ccm-wd-text-lg: 1.125rem;
+	--ccm-wd-text-xl: 1.25rem;
+	--ccm-wd-text-2xl: 1.5rem;
+}
+
+/* ===================================
+   Base Reset inside plugin wrapper
+   =================================== */
+.ccm-wd * {
+	box-sizing: border-box;
+}
+
+.ccm-wd {
+	font-family: var(--ccm-wd-font-sans);
+	color: var(--ccm-wd-text);
+	line-height: 1.5;
+}
+
+/* Hide WordPress default notices inside our wrapper */
+.ccm-wd .notice:not(.ccm-wd-notice) {
+	display: none;
+}
+
+/* ===================================
+   Header (Dark Bar)
+   =================================== */
+.ccm-wd-header {
+	background: linear-gradient(135deg, var(--ccm-wd-bg-dark) 0%, #1e293b 100%);
+	padding: var(--ccm-wd-space-lg) var(--ccm-wd-space-xl);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--ccm-wd-space-xl);
+	position: sticky;
+	top: 32px;
+	z-index: 100;
+	box-shadow: var(--ccm-wd-shadow-lg);
+}
+
+.ccm-wd-header-brand {
+	display: flex;
+	align-items: center;
+	gap: var(--ccm-wd-space-md);
+}
+
+.ccm-wd-header-brand h1 {
+	margin: 0;
+	font-size: var(--ccm-wd-text-xl);
+	font-weight: 600;
+	color: var(--ccm-wd-text-inverse);
+	letter-spacing: -0.025em;
+	white-space: nowrap;
+}
+
+.ccm-wd-header-brand .ccm-wd-version {
+	font-size: var(--ccm-wd-text-xs);
+	font-weight: 500;
+	color: var(--ccm-wd-text-light);
+	background: rgba(255, 255, 255, 0.08);
+	padding: 2px 8px;
+	border-radius: var(--ccm-wd-radius-full);
+}
+
+/* Navigation Tabs */
+.ccm-wd-tabs {
+	display: flex;
+	gap: var(--ccm-wd-space-xs);
+	background: rgba(255, 255, 255, 0.05);
+	padding: var(--ccm-wd-space-xs);
+	border-radius: var(--ccm-wd-radius-lg);
+}
+
+.ccm-wd-tab {
+	position: relative;
+	padding: var(--ccm-wd-space-sm) var(--ccm-wd-space-lg);
+	color: var(--ccm-wd-text-light);
+	text-decoration: none;
+	font-size: var(--ccm-wd-text-sm);
+	font-weight: 500;
+	border-radius: var(--ccm-wd-radius-md);
+	transition: all var(--ccm-wd-transition);
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.ccm-wd-tab:hover {
+	color: var(--ccm-wd-text-inverse);
+	background: rgba(255, 255, 255, 0.1);
+	text-decoration: none;
+}
+
+.ccm-wd-tab:focus {
+	text-decoration: none;
+	color: var(--ccm-wd-text-inverse);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.ccm-wd-tab.active {
+	color: var(--ccm-wd-primary);
+	background: var(--ccm-wd-surface);
+	box-shadow: var(--ccm-wd-shadow-sm);
+}
+
+.ccm-wd-tab.active:hover {
+	color: var(--ccm-wd-primary);
+}
+
+/* ===================================
+   Content Area
+   =================================== */
+.ccm-wd-content {
+	padding: var(--ccm-wd-space-xl);
+	max-width: 1100px;
+	margin: 0 auto;
+}
+
+/* ===================================
+   Cards
+   =================================== */
+.ccm-wd-card {
+	background: var(--ccm-wd-surface);
+	border-radius: var(--ccm-wd-radius-xl);
+	padding: var(--ccm-wd-space-xl);
+	margin-bottom: var(--ccm-wd-space-lg);
+	box-shadow: var(--ccm-wd-shadow);
+	border: 1px solid var(--ccm-wd-border);
+	transition: box-shadow var(--ccm-wd-transition);
+}
+
+.ccm-wd-card:hover {
+	box-shadow: var(--ccm-wd-shadow-md);
+}
+
+.ccm-wd-card h2 {
+	margin: 0 0 var(--ccm-wd-space-lg) 0;
+	font-size: var(--ccm-wd-text-xl);
+	font-weight: 600;
+	color: var(--ccm-wd-text);
+	padding-bottom: var(--ccm-wd-space-md);
+	border-bottom: 2px solid var(--ccm-wd-border);
+	display: flex;
+	align-items: center;
+	gap: var(--ccm-wd-space-sm);
+}
+
+.ccm-wd-card h2::before {
+	content: '';
+	width: 4px;
+	height: 24px;
+	background: linear-gradient(180deg, var(--ccm-wd-primary), var(--ccm-wd-accent));
+	border-radius: var(--ccm-wd-radius-full);
+	flex-shrink: 0;
+}
+
+.ccm-wd-card h3 {
+	margin: var(--ccm-wd-space-lg) 0 var(--ccm-wd-space-md) 0;
+	font-size: var(--ccm-wd-text-lg);
+	font-weight: 600;
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-card h3:first-child {
+	margin-top: 0;
+}
+
+.ccm-wd-card p {
+	color: var(--ccm-wd-text-muted);
+	margin: 0 0 var(--ccm-wd-space-md) 0;
+}
+
+.ccm-wd-card p:last-child {
+	margin-bottom: 0;
+}
+
+/* ===================================
+   Stats Grid
+   =================================== */
+.ccm-wd-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: var(--ccm-wd-space-md);
+	margin-bottom: var(--ccm-wd-space-lg);
+}
+
+.ccm-wd-stat-box {
+	background: var(--ccm-wd-bg);
+	padding: var(--ccm-wd-space-lg);
+	border-radius: var(--ccm-wd-radius-lg);
+	text-align: center;
+	border: 1px solid var(--ccm-wd-border);
+}
+
+.ccm-wd-stat-value {
+	display: block;
+	font-size: var(--ccm-wd-text-2xl);
+	font-weight: 700;
+	margin-bottom: var(--ccm-wd-space-xs);
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-stat-label {
+	display: block;
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text-muted);
+}
+
+/* ===================================
+   Tables
+   =================================== */
+.ccm-wd-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: var(--ccm-wd-space-md) 0;
+	font-size: var(--ccm-wd-text-sm);
+}
+
+.ccm-wd-table th,
+.ccm-wd-table td {
+	padding: var(--ccm-wd-space-md);
+	text-align: left;
+	border-bottom: 1px solid var(--ccm-wd-border);
+}
+
+.ccm-wd-table th {
+	font-weight: 600;
+	color: var(--ccm-wd-text);
+	background: var(--ccm-wd-bg);
+	white-space: nowrap;
+	width: 35%;
+}
+
+.ccm-wd-table tr:last-child td,
+.ccm-wd-table tr:last-child th {
+	border-bottom: none;
+}
+
+.ccm-wd-table tr:hover td {
+	background: var(--ccm-wd-primary-light);
+}
+
+/* ===================================
+   Badges
+   =================================== */
+.ccm-wd-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--ccm-wd-space-xs);
+	padding: 0.15em 0.6em;
+	font-size: var(--ccm-wd-text-xs);
+	font-weight: 600;
+	border-radius: var(--ccm-wd-radius-full);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.ccm-wd-badge-success {
+	background: var(--ccm-wd-success-bg);
+	color: var(--ccm-wd-success);
+	border: 1px solid var(--ccm-wd-success);
+}
+
+.ccm-wd-badge-error {
+	background: var(--ccm-wd-error-bg);
+	color: var(--ccm-wd-error);
+	border: 1px solid var(--ccm-wd-error);
+}
+
+.ccm-wd-badge-warning {
+	background: var(--ccm-wd-warning-bg);
+	color: var(--ccm-wd-warning);
+	border: 1px solid var(--ccm-wd-warning);
+}
+
+.ccm-wd-badge-info {
+	background: var(--ccm-wd-info-bg);
+	color: var(--ccm-wd-info);
+	border: 1px solid var(--ccm-wd-info);
+}
+
+.ccm-wd-badge-neutral {
+	background: var(--ccm-wd-bg);
+	color: var(--ccm-wd-text-muted);
+	border: 1px solid var(--ccm-wd-border);
+}
+
+/* ===================================
+   Buttons
+   =================================== */
+.ccm-wd-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--ccm-wd-space-sm);
+	padding: var(--ccm-wd-space-sm) var(--ccm-wd-space-lg);
+	font-family: inherit;
+	font-size: var(--ccm-wd-text-sm);
+	font-weight: 500;
+	color: var(--ccm-wd-text-inverse);
+	background: linear-gradient(135deg, var(--ccm-wd-primary) 0%, var(--ccm-wd-primary-hover) 100%);
+	border: none;
+	border-radius: var(--ccm-wd-radius-md);
+	cursor: pointer;
+	transition: all var(--ccm-wd-transition);
+	text-decoration: none;
+	box-shadow: var(--ccm-wd-shadow-sm);
+	line-height: 1.5;
+}
+
+.ccm-wd-button:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--ccm-wd-shadow-md);
+	filter: brightness(1.1);
+	color: var(--ccm-wd-text-inverse);
+	text-decoration: none;
+}
+
+.ccm-wd-button:active {
+	transform: translateY(0);
+}
+
+.ccm-wd-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.ccm-wd-button-secondary {
+	background: var(--ccm-wd-surface);
+	color: var(--ccm-wd-text);
+	border: 1px solid var(--ccm-wd-border);
+}
+
+.ccm-wd-button-secondary:hover {
+	background: var(--ccm-wd-bg);
+	border-color: var(--ccm-wd-primary);
+	color: var(--ccm-wd-primary);
+}
+
+.ccm-wd-button-danger {
+	background: linear-gradient(135deg, var(--ccm-wd-error) 0%, #dc2626 100%);
+}
+
+.ccm-wd-button-success {
+	background: linear-gradient(135deg, var(--ccm-wd-success) 0%, #16a34a 100%);
+}
+
+.ccm-wd-button-small {
+	padding: var(--ccm-wd-space-xs) var(--ccm-wd-space-md);
+	font-size: var(--ccm-wd-text-xs);
+}
+
+.ccm-wd-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--ccm-wd-space-sm);
+	margin-top: var(--ccm-wd-space-lg);
+}
+
+/* ===================================
+   Toggle Switch
+   =================================== */
+.ccm-wd-toggle {
+	position: relative;
+	display: inline-block;
+	width: 52px;
+	height: 28px;
+	flex-shrink: 0;
+}
+
+.ccm-wd-toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.ccm-wd-toggle-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-full);
+	transition: var(--ccm-wd-transition);
+}
+
+.ccm-wd-toggle-slider::before {
+	position: absolute;
+	content: "";
+	height: 22px;
+	width: 22px;
+	left: 3px;
+	bottom: 3px;
+	background-color: white;
+	border-radius: 50%;
+	transition: var(--ccm-wd-transition);
+	box-shadow: var(--ccm-wd-shadow-sm);
+}
+
+.ccm-wd-toggle input:checked + .ccm-wd-toggle-slider {
+	background-color: var(--ccm-wd-success);
+}
+
+.ccm-wd-toggle input:focus + .ccm-wd-toggle-slider {
+	box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+.ccm-wd-toggle input:checked + .ccm-wd-toggle-slider::before {
+	transform: translateX(24px);
+}
+
+/* ===================================
+   Alerts
+   =================================== */
+.ccm-wd-alert {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--ccm-wd-space-md);
+	padding: var(--ccm-wd-space-md) var(--ccm-wd-space-lg);
+	border-radius: var(--ccm-wd-radius-lg);
+	margin: var(--ccm-wd-space-md) 0;
+}
+
+.ccm-wd-alert-info {
+	background: var(--ccm-wd-info-bg);
+	border-left: 4px solid var(--ccm-wd-info);
+}
+
+.ccm-wd-alert-success {
+	background: var(--ccm-wd-success-bg);
+	border-left: 4px solid var(--ccm-wd-success);
+}
+
+.ccm-wd-alert-warning {
+	background: var(--ccm-wd-warning-bg);
+	border-left: 4px solid var(--ccm-wd-warning);
+}
+
+.ccm-wd-alert-error {
+	background: var(--ccm-wd-error-bg);
+	border-left: 4px solid var(--ccm-wd-error);
+}
+
+.ccm-wd-alert p {
+	margin: var(--ccm-wd-space-xs) 0 0;
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-alert p:first-child {
+	margin-top: 0;
+}
+
+.ccm-wd-alert strong {
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-alert ol,
+.ccm-wd-alert ul {
+	margin: var(--ccm-wd-space-sm) 0 0;
+	padding-left: var(--ccm-wd-space-lg);
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-alert li {
+	margin-bottom: var(--ccm-wd-space-xs);
+}
+
+/* ===================================
+   Form Controls
+   =================================== */
+.ccm-wd-setting-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--ccm-wd-space-lg);
+	padding: var(--ccm-wd-space-md) 0;
+	border-bottom: 1px solid var(--ccm-wd-border);
+}
+
+.ccm-wd-setting-row:last-child {
+	border-bottom: none;
+}
+
+.ccm-wd-setting-info {
+	flex: 1;
+}
+
+.ccm-wd-setting-info strong {
+	display: block;
+	margin-bottom: var(--ccm-wd-space-xs);
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-setting-info .ccm-wd-text-muted {
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text-muted);
+	margin: 0;
+}
+
+.ccm-wd-setting-control {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+}
+
+.ccm-wd-text-muted {
+	color: var(--ccm-wd-text-muted);
+	font-size: var(--ccm-wd-text-sm);
+	margin: var(--ccm-wd-space-xs) 0;
+}
+
+/* Inputs */
+.ccm-wd-input,
+.ccm-wd-select {
+	padding: var(--ccm-wd-space-sm) var(--ccm-wd-space-md);
+	font-family: inherit;
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text);
+	background: var(--ccm-wd-surface);
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	transition: var(--ccm-wd-transition);
+}
+
+.ccm-wd-input:focus,
+.ccm-wd-select:focus {
+	outline: none;
+	border-color: var(--ccm-wd-primary);
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.ccm-wd-textarea {
+	width: 100%;
+	padding: var(--ccm-wd-space-md);
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	font-family: var(--ccm-wd-font-mono);
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text);
+	background: var(--ccm-wd-surface);
+	resize: vertical;
+	min-height: 100px;
+	transition: var(--ccm-wd-transition);
+}
+
+.ccm-wd-textarea:focus {
+	outline: none;
+	border-color: var(--ccm-wd-primary);
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Number inputs */
+.ccm-wd-number-input {
+	width: 90px;
+	padding: var(--ccm-wd-space-sm) var(--ccm-wd-space-md);
+	font-family: inherit;
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text);
+	background: var(--ccm-wd-surface);
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	transition: var(--ccm-wd-transition);
+	-moz-appearance: textfield;
+}
+
+.ccm-wd-number-input:focus {
+	outline: none;
+	border-color: var(--ccm-wd-primary);
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Form Table (for advanced settings grid) */
+.ccm-wd-form-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.ccm-wd-form-table th {
+	text-align: left;
+	vertical-align: middle;
+	padding: var(--ccm-wd-space-sm) var(--ccm-wd-space-md) var(--ccm-wd-space-sm) 0;
+	font-weight: 500;
+	font-size: var(--ccm-wd-text-sm);
+	color: var(--ccm-wd-text);
+	white-space: nowrap;
+}
+
+.ccm-wd-form-table td {
+	padding: var(--ccm-wd-space-sm) 0;
+}
+
+.ccm-wd-form-table tr {
+	border-bottom: 1px solid var(--ccm-wd-border);
+}
+
+.ccm-wd-form-table tr:last-child {
+	border-bottom: none;
+}
+
+/* ===================================
+   IP List
+   =================================== */
+.ccm-wd-ip-list {
+	list-style: none;
+	margin: var(--ccm-wd-space-sm) 0 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--ccm-wd-space-xs);
+}
+
+.ccm-wd-ip-list li {
+	display: inline-flex;
+	padding: 2px 10px;
+	font-size: var(--ccm-wd-text-xs);
+	font-family: var(--ccm-wd-font-mono);
+	background: var(--ccm-wd-error-bg);
+	color: var(--ccm-wd-error);
+	border: 1px solid var(--ccm-wd-error);
+	border-radius: var(--ccm-wd-radius-full);
+}
+
+/* ===================================
+   Form Actions (buttons row at bottom)
+   =================================== */
+.ccm-wd-form-actions {
+	display: flex;
+	gap: var(--ccm-wd-space-sm);
+	flex-wrap: wrap;
+	padding-top: var(--ccm-wd-space-lg);
+	border-top: 1px solid var(--ccm-wd-border);
+	margin-top: var(--ccm-wd-space-lg);
+}
+
+/* ===================================
+   WordPress Admin Overrides
+   =================================== */
+/* Hide the default WP h1 since we have our own header */
+.ccm-wd > h1 {
+	display: none;
+}
+
+/* Override WP submit button styling when inside our wrapper */
+.ccm-wd #submit,
+.ccm-wd .button-primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--ccm-wd-space-sm);
+	padding: var(--ccm-wd-space-sm) var(--ccm-wd-space-lg) !important;
+	font-family: inherit !important;
+	font-size: var(--ccm-wd-text-sm) !important;
+	font-weight: 500 !important;
+	color: var(--ccm-wd-text-inverse) !important;
+	background: linear-gradient(135deg, var(--ccm-wd-primary) 0%, var(--ccm-wd-primary-hover) 100%) !important;
+	border: none !important;
+	border-radius: var(--ccm-wd-radius-md) !important;
+	cursor: pointer;
+	transition: all var(--ccm-wd-transition);
+	text-decoration: none;
+	box-shadow: var(--ccm-wd-shadow-sm) !important;
+	height: auto !important;
+	line-height: 1.5 !important;
+}
+
+.ccm-wd #submit:hover,
+.ccm-wd .button-primary:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--ccm-wd-shadow-md) !important;
+	filter: brightness(1.1);
+}
+
+/* ===================================
+   Responsive
+   =================================== */
+@media screen and (max-width: 960px) {
+	.ccm-wd-header {
+		flex-direction: column;
+		gap: var(--ccm-wd-space-md);
+		padding: var(--ccm-wd-space-md);
+	}
+
+	.ccm-wd-tabs {
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.ccm-wd-stats-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media screen and (max-width: 782px) {
+	.ccm-wd-header {
+		top: 46px;
+	}
+
+	.ccm-wd-content {
+		padding: var(--ccm-wd-space-md);
+	}
+
+	.ccm-wd-card {
+		padding: var(--ccm-wd-space-md);
+	}
+
+	.ccm-wd-setting-row {
+		flex-direction: column;
+		gap: var(--ccm-wd-space-sm);
+	}
+
+	.ccm-wd-tabs {
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.ccm-wd-tab {
+		text-align: center;
+		padding: var(--ccm-wd-space-md);
+	}
+}

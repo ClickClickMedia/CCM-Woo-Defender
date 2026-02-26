@@ -1,5 +1,41 @@
 # AI Notes
 
+## 1.00.014 - 2026-02-27
+
+### Objective
+
+Redesign the admin UI to match the CCM-Tools design system for consistent branding across Click Click Media plugins.
+
+### Implemented
+
+- Created `css/ccm-wd-admin.css` with a complete design system adapted from CCM-Tools:
+  - CSS custom properties (design tokens) for brand colours, status colours, neutrals, spacing, radii, shadows, transitions, and typography.
+  - Dark gradient header bar with brand title, version badge, and pill-style tab navigation.
+  - Card-based content layout with blue accent borders on headings.
+  - Stats grid with large metric values for the Overview dashboard.
+  - Styled tables with hover effects replacing WordPress `widefat striped`.
+  - Badge system (success/error/warning/info/neutral) for status indicators.
+  - Toggle switch controls replacing plain checkboxes for enable/advanced settings.
+  - Alert boxes with left-border accents for info/success/warning/error messages.
+  - Styled form controls (select, number input, textarea) with focus rings.
+  - Form table layout for advanced settings grid.
+  - IP list display as inline pill badges.
+  - Responsive breakpoints for tablet and mobile.
+  - WordPress admin overrides to harmonise submit buttons and hide default notices.
+- Added `enqueue_admin_assets()` method to load the CSS only on the plugin's admin page (`woocommerce_page_ccm-woo-defender`).
+- Rewrote `render_page()`: dark header bar with version badge, pill-style tab navigation, styled alert messages for save/reset/clear confirmations.
+- Rewrote `render_overview()`: stats grid at top (Checkout Attempts, Blocked, Active Blocks, Force Block status), Status Details card with badge indicators, Last Checkout Request diagnostics card, How Defender Works info card, Data Management card with confirm-dialog danger button.
+- Rewrote `render_settings()`: Easy Setup card with toggle switch rows, styled select dropdown, number inputs, textarea for IP list; Advanced Detection Controls card (conditional) with form table layout for signal weights and trigger thresholds; Save and Reset buttons using the new design system.
+- All CSS classes use `ccm-wd-` prefix to avoid conflicts if CCM-Tools is active on the same site.
+
+### Why this approach
+
+- Consistent branding across plugins builds trust and reduces cognitive load for store administrators.
+- CSS custom properties enable easy theme adjustments without touching component styles.
+- Toggle switches and badge indicators provide clearer visual feedback than plain checkboxes and text labels.
+- Card-based layout with stats grid follows the same information hierarchy pattern proven in CCM-Tools.
+- The dark sticky header and pill navigation provide persistent context when scrolling long settings pages.
+
 ## 1.00.013 - 2026-02-27
 
 ### Objective

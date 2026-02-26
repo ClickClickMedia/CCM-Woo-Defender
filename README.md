@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.013`
+`1.00.014`
 
 ## What it does
 
