@@ -1,5 +1,22 @@
 # AI Notes
 
+## 1.00.007 - 2026-02-27
+
+### Objective
+
+Improve simulation usability by reducing noisy deprecation output and clarify test interpretation.
+
+### Implemented
+
+- Updated `wp ccm-wd simulate` to suppress `E_DEPRECATED` and `E_USER_DEPRECATED` notices by default during the run.
+- Added opt-in flag `--allow-deprecations=1` for full raw output when debugging runtime environment issues.
+- Documented this behavior in README test instructions.
+
+### Why this approach
+
+- The deprecation notices shown were from WP-CLI bundled vendor libraries, not Defender logic.
+- Cleaner output makes it easier to verify actual fraud scoring and block transitions.
+
 ## 1.00.006 - 2026-02-27
 
 ### Objective

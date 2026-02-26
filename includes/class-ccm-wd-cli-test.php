@@ -31,6 +31,9 @@ class CCM_WD_CLI_Test {
      *
      * [--clear-first=<0|1>]
      * : Clear Defender events/blocks before simulation (default: 1).
+    *
+    * [--allow-deprecations=<0|1>]
+    * : Show PHP deprecation notices during simulation (default: 0).
      *
      * ## EXAMPLES
      *
@@ -41,6 +44,13 @@ class CCM_WD_CLI_Test {
      * @param array<string, string> $assoc_args
      */
     public static function simulate( array $args, array $assoc_args ): void {
+        $allow_deprecations = '1' === (string) ( $assoc_args['allow-deprecations'] ?? '0' );
+        $previous_reporting = error_reporting();
+
+        if ( ! $allow_deprecations ) {
+            error_reporting( $previous_reporting & ~E_DEPRECATED & ~E_USER_DEPRECATED );
+        }
+
         $store    = new CCM_WD_Store();
         $settings = new CCM_WD_Settings();
         $analyzer = new CCM_WD_Analyzer( $store, $settings );
@@ -54,63 +64,67 @@ class CCM_WD_CLI_Test {
         $total_value = (float) ( $assoc_args['total'] ?? 139.2 );
         $total       = number_format( $total_value, 2, '.', '' );
 
-        if ( $clear_first ) {
-            $store->clear_events();
-            $store->clear_blocks();
-            \WP_CLI::log( 'Cleared existing Defender events and blocks.' );
-        }
-
-        $rows = array();
-
-        for ( $i = 1; $i <= $attempts; $i++ ) {
-            $email    = 'fraud-sim-' . $i . '@example.test';
-            $name     = 'Test User ' . $i;
-            $address1 = $i . ' Invalid Street';
-            $city     = 'Sydney';
-            $postcode = '2000';
-            $ua       = 'CCM-WD-Simulator/1.0';
-
-            $context = self::build_context( $gateway, $country, $total, $ip, $ua, $email, $name, $address1, $city, $postcode );
-
-            $evaluation = $analyzer->evaluate( $context );
-            $blocked    = ! empty( $evaluation['blocked'] );
-
-            if ( $blocked ) {
-                $duration = (int) $settings->get()['block_duration_hours'] * HOUR_IN_SECONDS;
-                $store->block_tokens( (array) ( $evaluation['matched_tokens'] ?? array() ), $duration );
+        try {
+            if ( $clear_first ) {
+                $store->clear_events();
+                $store->clear_blocks();
+                \WP_CLI::log( 'Cleared existing Defender events and blocks.' );
             }
 
-            $store->add_event(
-                array_merge(
-                    $context,
-                    array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => $blocked,
-                        'score'   => (int) ( $evaluation['score'] ?? 0 ),
-                        'reasons' => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
+            $rows = array();
+
+            for ( $i = 1; $i <= $attempts; $i++ ) {
+                $email    = 'fraud-sim-' . $i . '@example.test';
+                $name     = 'Test User ' . $i;
+                $address1 = $i . ' Invalid Street';
+                $city     = 'Sydney';
+                $postcode = '2000';
+                $ua       = 'CCM-WD-Simulator/1.0';
+
+                $context = self::build_context( $gateway, $country, $total, $ip, $ua, $email, $name, $address1, $city, $postcode );
+
+                $evaluation = $analyzer->evaluate( $context );
+                $blocked    = ! empty( $evaluation['blocked'] );
+
+                if ( $blocked ) {
+                    $duration = (int) $settings->get()['block_duration_hours'] * HOUR_IN_SECONDS;
+                    $store->block_tokens( (array) ( $evaluation['matched_tokens'] ?? array() ), $duration );
+                }
+
+                $store->add_event(
+                    array_merge(
+                        $context,
+                        array(
+                            'ts'      => CCM_WD_Utils::now(),
+                            'blocked' => $blocked,
+                            'score'   => (int) ( $evaluation['score'] ?? 0 ),
+                            'reasons' => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
+                        )
                     )
+                );
+
+                $rows[] = array(
+                    'attempt' => (string) $i,
+                    'score'   => (string) ( $evaluation['score'] ?? 0 ),
+                    'blocked' => $blocked ? 'yes' : 'no',
+                    'reasons' => implode( '|', (array) ( $evaluation['reasons'] ?? array() ) ),
+                );
+            }
+
+            \WP_CLI\Utils\format_items( 'table', $rows, array( 'attempt', 'score', 'blocked', 'reasons' ) );
+
+            $stats = $store->get_stats();
+            \WP_CLI::success(
+                sprintf(
+                    'Simulation complete. Tracked attempts: %d, blocked attempts: %d, active block tokens: %d',
+                    (int) $stats['events_total'],
+                    (int) $stats['events_blocked'],
+                    (int) $stats['active_blocks']
                 )
             );
-
-            $rows[] = array(
-                'attempt' => (string) $i,
-                'score'   => (string) ( $evaluation['score'] ?? 0 ),
-                'blocked' => $blocked ? 'yes' : 'no',
-                'reasons' => implode( '|', (array) ( $evaluation['reasons'] ?? array() ) ),
-            );
+        } finally {
+            error_reporting( $previous_reporting );
         }
-
-        \WP_CLI\Utils\format_items( 'table', $rows, array( 'attempt', 'score', 'blocked', 'reasons' ) );
-
-        $stats = $store->get_stats();
-        \WP_CLI::success(
-            sprintf(
-                'Simulation complete. Tracked attempts: %d, blocked attempts: %d, active block tokens: %d',
-                (int) $stats['events_total'],
-                (int) $stats['events_blocked'],
-                (int) $stats['active_blocks']
-            )
-        );
     }
 
     private static function build_context( string $gateway, string $country, string $total, string $ip, string $ua, string $email, string $name, string $address1, string $city, string $postcode ): array {

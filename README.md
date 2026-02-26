@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.006`
+`1.00.007`
 
 ## What it does
 
@@ -104,6 +104,12 @@ Useful variants:
 
 - `wp ccm-wd simulate --attempts=8 --gateway=paypal --total=139.20 --clear-first=1`
 - `wp ccm-wd simulate --attempts=10 --gateway=stripe --ip=169.148.67.2 --country=AU`
+
+Deprecation notice handling:
+
+- By default, simulation suppresses PHP deprecation notices from external WP-CLI vendor libraries so output stays readable.
+- If you want full raw deprecation output for debugging, add:
+- `--allow-deprecations=1`
 
 What success looks like:
 
