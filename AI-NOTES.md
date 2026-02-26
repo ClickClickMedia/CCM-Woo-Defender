@@ -1,5 +1,29 @@
 # AI Notes
 
+## 1.00.015 - 2026-02-27
+
+### Objective
+
+Add AJAX-powered Advanced Mode toggle so the Advanced Detection Controls card appears and disappears instantly without a full page reload.
+
+### Implemented
+
+- Created `js/ccm-wd-admin.js` with a vanilla JS listener on the Advanced Mode checkbox that:
+  - Animates the Advanced Detection Controls card in/out (opacity + translateY transition).
+  - Sends an AJAX POST (`ccm_wd_toggle_advanced`) to persist the setting immediately.
+- Added `ajax_toggle_advanced()` handler in `CCM_WD_Admin` — verifies nonce + capability, merges the toggled value into the current settings array, and saves.
+- Registered `wp_ajax_ccm_wd_toggle_advanced` action in `register_hooks()`.
+- Updated `enqueue_admin_assets()` to enqueue the JS file (footer, versioned) and pass `ajaxUrl` + `nonce` via `wp_localize_script()`.
+- Advanced Detection Controls card is now always rendered in the DOM with `id="ccm-wd-advanced-card"` and hidden via inline `display:none` when advanced mode is off.
+- Advanced Mode checkbox gained `id="ccm-wd-advanced-mode"` for JS targeting.
+- Removed the PHP `<?php if ( ! empty( $settings['advanced_mode'] ) ) : ?>` conditional so the card is present in the HTML regardless of the saved state.
+
+### Why this approach
+
+- Persisting the toggle via AJAX means the saved state is always consistent with the UI — if the user refreshes the page the card stays in the correct visibility state.
+- Rendering the card in the DOM (hidden) rather than lazy-loading HTML ensures all form fields are always submitted on Save, preventing data loss if the user toggles advanced on, edits values, then saves.
+- Vanilla JS with no jQuery dependency keeps the script small and fast.
+
 ## 1.00.014 - 2026-02-27
 
 ### Objective

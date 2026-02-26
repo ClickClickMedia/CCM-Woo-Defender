@@ -17,6 +17,7 @@ class CCM_WD_Admin {
         add_action( 'admin_post_ccm_wd_save_settings', array( $this, 'handle_save_settings' ) );
         add_action( 'admin_post_ccm_wd_reset_settings', array( $this, 'handle_reset_settings' ) );
         add_action( 'admin_post_ccm_wd_clear_data', array( $this, 'handle_clear_data' ) );
+        add_action( 'wp_ajax_ccm_wd_toggle_advanced', array( $this, 'ajax_toggle_advanced' ) );
     }
 
     public function register_menu(): void {
@@ -31,7 +32,7 @@ class CCM_WD_Admin {
     }
 
     /**
-     * Enqueue admin CSS on the plugin page only.
+     * Enqueue admin CSS and JS on the plugin page only.
      */
     public function enqueue_admin_assets( string $hook ): void {
         if ( 'woocommerce_page_ccm-woo-defender' !== $hook ) {
@@ -44,6 +45,19 @@ class CCM_WD_Admin {
             array(),
             CCM_WD_VERSION
         );
+
+        wp_enqueue_script(
+            'ccm-wd-admin',
+            plugin_dir_url( CCM_WD_FILE ) . 'js/ccm-wd-admin.js',
+            array(),
+            CCM_WD_VERSION,
+            true
+        );
+
+        wp_localize_script( 'ccm-wd-admin', 'ccmWdAdmin', array(
+            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+            'nonce'   => wp_create_nonce( 'ccm_wd_toggle_advanced' ),
+        ) );
     }
 
     public function handle_save_settings(): void {
@@ -88,6 +102,23 @@ class CCM_WD_Admin {
 
         wp_safe_redirect( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview&cleared=1' ) );
         exit;
+    }
+
+    /**
+     * AJAX handler: toggle advanced_mode on/off and persist immediately.
+     */
+    public function ajax_toggle_advanced(): void {
+        check_ajax_referer( 'ccm_wd_toggle_advanced' );
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            wp_send_json_error( array( 'message' => 'Not allowed.' ), 403 );
+        }
+
+        $current = $this->settings->get();
+        $current['advanced_mode'] = ! empty( $_POST['advanced_mode'] );
+        $this->settings->update( $current );
+
+        wp_send_json_success( array( 'advanced_mode' => ! empty( $current['advanced_mode'] ) ) );
     }
 
     public function render_page(): void {
@@ -377,7 +408,7 @@ class CCM_WD_Admin {
                     </div>
                     <div class="ccm-wd-setting-control">
                         <label class="ccm-wd-toggle">
-                            <input type="checkbox" name="ccm_wd_settings[advanced_mode]" value="1" <?php checked( ! empty( $settings['advanced_mode'] ) ); ?> />
+                            <input type="checkbox" id="ccm-wd-advanced-mode" name="ccm_wd_settings[advanced_mode]" value="1" <?php checked( ! empty( $settings['advanced_mode'] ) ); ?> />
                             <span class="ccm-wd-toggle-slider"></span>
                         </label>
                     </div>
@@ -393,9 +424,8 @@ class CCM_WD_Admin {
                 </div>
             </div>
 
-            <?php if ( ! empty( $settings['advanced_mode'] ) ) : ?>
             <!-- Advanced Detection Controls Card -->
-            <div class="ccm-wd-card">
+            <div id="ccm-wd-advanced-card" class="ccm-wd-card" style="<?php echo empty( $settings['advanced_mode'] ) ? 'display:none;' : ''; ?>">
                 <h2><?php esc_html_e( 'Advanced Detection Controls', 'ccm-woo-defender' ); ?></h2>
                 <p><?php esc_html_e( 'These values override preset defaults. Lower thresholds and higher weights increase strictness.', 'ccm-woo-defender' ); ?></p>
 
@@ -466,7 +496,6 @@ class CCM_WD_Admin {
                     </tr>
                 </table>
             </div>
-            <?php endif; ?>
 
             <!-- Save / Reset Buttons -->
             <div class="ccm-wd-card">
