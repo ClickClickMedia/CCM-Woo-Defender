@@ -1,5 +1,25 @@
 # AI Notes
 
+## 1.00.011 - 2026-02-27
+
+### Objective
+
+Provide visible, easy-to-manage IP blocking in admin and ensure those manual blocks are enforced deterministically at checkout.
+
+### Implemented
+
+- Added `Manual blocked IP list` setting (one IP per line) with validation/sanitization.
+- Added hard enforcement path in checkout guard (`manual_ip_block`) before risk scoring.
+- Added Overview visibility:
+	- manual blocked IP count,
+	- full configured manual IP list.
+- Added WP-CLI diagnostics command: `wp ccm-wd runtime-ip` to inspect runtime IP/header resolution.
+
+### Why this approach
+
+- Gives admins a straightforward “list of blocked IPs” in UI.
+- Eliminates uncertainty when testing IP blocks behind proxies/CDNs.
+
 ## 1.00.010 - 2026-02-27
 
 ### Objective

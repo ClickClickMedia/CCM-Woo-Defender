@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.010`
+`1.00.011`
 
 ## What it does
 
@@ -150,6 +150,27 @@ Disable when finished:
 - `wp ccm-wd clear-force-block`
 
 This is the recommended way to validate customer-facing blocked UX reliably in staging.
+
+## Manual IP blocklist (admin UI)
+
+You can now manage a visible IP list in WooCommerce > CCM Woo Defender > Settings:
+
+- Field: `Manual blocked IP list`
+- Format: one IP per line
+- Behavior: these IPs are hard-blocked before scoring logic runs
+
+The Overview tab also shows:
+
+- Manual blocked IP count
+- The current configured IP list
+
+## Runtime IP diagnostics
+
+If an expected IP block does not trigger, check what IP Defender actually sees:
+
+- `wp ccm-wd runtime-ip`
+
+This prints resolved client IP plus forwarding headers (`REMOTE_ADDR`, `HTTP_X_FORWARDED_FOR`, `HTTP_CF_CONNECTING_IP`).
 
 ## Notes
 

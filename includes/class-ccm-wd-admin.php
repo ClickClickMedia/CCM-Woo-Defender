@@ -116,9 +116,10 @@ class CCM_WD_Admin {
 
     /**
      * @param array<string, int> $stats
-     * @param array<string, int|bool> $settings
+     * @param array<string, int|bool|string> $settings
      */
     private function render_overview( array $stats, array $settings ): void {
+        $manual_ips = $this->settings->get_manual_blocked_ips();
         ?>
         <table class="widefat striped" style="max-width: 760px; margin-top: 16px;">
             <tbody>
@@ -154,8 +155,25 @@ class CCM_WD_Admin {
                 <th><?php esc_html_e( 'Force block mode', 'ccm-woo-defender' ); ?></th>
                 <td><?php echo ! empty( $stats['force_block_on'] ) ? esc_html__( 'Active', 'ccm-woo-defender' ) : esc_html__( 'Off', 'ccm-woo-defender' ); ?></td>
             </tr>
+            <tr>
+                <th><?php esc_html_e( 'Manual blocked IPs', 'ccm-woo-defender' ); ?></th>
+                <td><?php echo esc_html( (string) count( $manual_ips ) ); ?></td>
+            </tr>
             </tbody>
         </table>
+
+        <div style="margin-top: 12px; max-width: 760px;">
+            <strong><?php esc_html_e( 'Manual blocked IP list', 'ccm-woo-defender' ); ?></strong>
+            <?php if ( empty( $manual_ips ) ) : ?>
+                <p><?php esc_html_e( 'No manual IPs configured.', 'ccm-woo-defender' ); ?></p>
+            <?php else : ?>
+                <ul style="margin-left: 18px;">
+                    <?php foreach ( $manual_ips as $ip ) : ?>
+                        <li><?php echo esc_html( $ip ); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </div>
 
         <div class="notice notice-info" style="margin-top: 16px; max-width: 960px;">
             <p><strong><?php esc_html_e( 'How Defender works (simple version):', 'ccm-woo-defender' ); ?></strong></p>
@@ -179,7 +197,7 @@ class CCM_WD_Admin {
     }
 
     /**
-     * @param array<string, int|bool> $settings
+     * @param array<string, int|bool|string> $settings
      */
     private function render_settings( array $settings ): void {
         $profiles = $this->settings->get_profile_labels();
@@ -228,6 +246,13 @@ class CCM_WD_Admin {
                             <input type="checkbox" name="ccm_wd_settings[advanced_mode]" value="1" <?php checked( ! empty( $settings['advanced_mode'] ) ); ?> />
                             <?php esc_html_e( 'Enable expert controls (weights and trigger thresholds)', 'ccm-woo-defender' ); ?>
                         </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e( 'Manual blocked IP list', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <textarea name="ccm_wd_settings[manual_blocked_ips]" rows="6" style="width:100%; max-width:420px;"><?php echo esc_textarea( (string) ( $settings['manual_blocked_ips'] ?? '' ) ); ?></textarea>
+                        <p class="description"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses are always blocked at checkout before scoring.', 'ccm-woo-defender' ); ?></p>
                     </td>
                 </tr>
                 </tbody>

@@ -12,6 +12,7 @@ class CCM_WD_CLI_Test {
             \WP_CLI::add_command( 'ccm-wd force-block', array( __CLASS__, 'force_block' ) );
             \WP_CLI::add_command( 'ccm-wd clear-force-block', array( __CLASS__, 'clear_force_block' ) );
             \WP_CLI::add_command( 'ccm-wd force-block-status', array( __CLASS__, 'force_block_status' ) );
+            \WP_CLI::add_command( 'ccm-wd runtime-ip', array( __CLASS__, 'runtime_ip' ) );
         }
     }
 
@@ -309,5 +310,26 @@ class CCM_WD_CLI_Test {
         $until = $store->get_force_block_until();
         \WP_CLI::log( 'Force block is ACTIVE.' );
         \WP_CLI::log( 'Expires: ' . gmdate( 'Y-m-d H:i:s', $until ) . ' UTC' );
+    }
+
+    /**
+     * Show the client IP and forwarding headers as seen by Woo Defender.
+     *
+     * ## EXAMPLES
+     *
+     *     wp ccm-wd runtime-ip
+     *
+     * @param array<int, string> $args
+     * @param array<string, string> $assoc_args
+     */
+    public static function runtime_ip( array $args, array $assoc_args ): void {
+        $rows = array(
+            array( 'field' => 'resolved_client_ip', 'value' => CCM_WD_Utils::get_client_ip() ),
+            array( 'field' => 'remote_addr', 'value' => (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) ),
+            array( 'field' => 'http_x_forwarded_for', 'value' => (string) ( $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '' ) ),
+            array( 'field' => 'http_cf_connecting_ip', 'value' => (string) ( $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '' ) ),
+        );
+
+        \WP_CLI\Utils\format_items( 'table', $rows, array( 'field', 'value' ) );
     }
 }

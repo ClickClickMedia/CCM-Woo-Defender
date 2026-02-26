@@ -76,6 +76,7 @@ class CCM_WD_Settings {
     public function defaults(): array {
         return array(
             'enabled'                                  => true,
+            'manual_blocked_ips'                       => '',
             'advanced_mode'                            => false,
             'profile'                                  => 'balanced',
             'threshold'                                => 70,
@@ -110,6 +111,7 @@ class CCM_WD_Settings {
 
         return array(
             'enabled'                                  => ! empty( $raw['enabled'] ),
+            'manual_blocked_ips'                       => $this->sanitize_ip_list_text( (string) ( $raw['manual_blocked_ips'] ?? $defaults['manual_blocked_ips'] ) ),
             'advanced_mode'                            => ! empty( $raw['advanced_mode'] ),
             'profile'                                  => $profile,
             'threshold'                                => $this->bounded_int( $raw['threshold'] ?? $defaults['threshold'], 20, 200 ),
@@ -136,6 +138,58 @@ class CCM_WD_Settings {
     private function bounded_int( $value, int $min, int $max ): int {
         $number = absint( (string) $value );
         return max( $min, min( $max, $number ) );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function get_manual_blocked_ips(): array {
+        $settings = $this->get();
+        $raw      = (string) ( $settings['manual_blocked_ips'] ?? '' );
+
+        if ( '' === trim( $raw ) ) {
+            return array();
+        }
+
+        $items = preg_split( '/[\r\n,]+/', $raw ) ?: array();
+        $ips   = array();
+
+        foreach ( $items as $item ) {
+            $ip = trim( $item );
+
+            if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                continue;
+            }
+
+            $ips[ $ip ] = true;
+        }
+
+        return array_keys( $ips );
+    }
+
+    public function is_ip_manually_blocked( string $ip ): bool {
+        if ( '' === $ip ) {
+            return false;
+        }
+
+        return in_array( $ip, $this->get_manual_blocked_ips(), true );
+    }
+
+    private function sanitize_ip_list_text( string $value ): string {
+        $items = preg_split( '/[\r\n,]+/', $value ) ?: array();
+        $ips   = array();
+
+        foreach ( $items as $item ) {
+            $ip = trim( (string) $item );
+
+            if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                continue;
+            }
+
+            $ips[ $ip ] = true;
+        }
+
+        return implode( "\n", array_keys( $ips ) );
     }
 
     /**
