@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.005`
+`1.00.006`
 
 ## What it does
 
@@ -91,6 +91,29 @@ Optional GitHub token:
 
 - For higher API limits (or private repo scenarios), define in `wp-config.php`:
 - `define('CCM_WD_GITHUB_TOKEN', 'your_token_here');`
+
+## How to test blocking automatically (WP-CLI)
+
+Defender now includes a simulation command that generates fraud-like attempts and prints scoring/block decisions.
+
+Run from your WordPress root:
+
+- `wp ccm-wd simulate`
+
+Useful variants:
+
+- `wp ccm-wd simulate --attempts=8 --gateway=paypal --total=139.20 --clear-first=1`
+- `wp ccm-wd simulate --attempts=10 --gateway=stripe --ip=169.148.67.2 --country=AU`
+
+What success looks like:
+
+- Output table shows each attempt with `score`, `blocked` (`yes/no`), and `reasons`.
+- In a normal run, early attempts are often `blocked=no` and later attempts switch to `blocked=yes` as patterns accumulate.
+- Final success line prints counts for tracked attempts, blocked attempts, and active block tokens.
+
+Tip:
+
+- Set profile to `Balanced` first, run simulation, then compare with `Strict` and `Lenient` to verify sensitivity.
 
 ## Notes
 

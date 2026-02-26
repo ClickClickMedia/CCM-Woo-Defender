@@ -8,6 +8,7 @@ require_once CCM_WD_PATH . 'includes/class-ccm-wd-store.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-analyzer.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-checkout-guard.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-admin.php';
+require_once CCM_WD_PATH . 'includes/class-ccm-wd-cli-test.php';
 
 class CCM_WD_Plugin {
     private static ?CCM_WD_Plugin $instance = null;
@@ -48,6 +49,7 @@ class CCM_WD_Plugin {
         $this->admin    = new CCM_WD_Admin( $this->store, $this->settings );
         $this->guard->register_hooks();
         $this->admin->register_hooks();
+        CCM_WD_CLI_Test::register();
     }
 
     private function is_woocommerce_active(): bool {

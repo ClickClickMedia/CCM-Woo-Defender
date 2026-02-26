@@ -1,5 +1,24 @@
 # AI Notes
 
+## 1.00.006 - 2026-02-27
+
+### Objective
+
+Provide an easy automated way to validate fraud scoring and blocking behavior end-to-end.
+
+### Implemented
+
+- Added WP-CLI simulation command: `wp ccm-wd simulate`.
+- Command generates fraud-like identity churn attempts against the same gateway/amount signature.
+- For each attempt, it evaluates score and block outcome, persists the event, and applies block tokens when triggered.
+- Outputs a table of attempts with `score`, `blocked`, and `reasons` so behavior is immediately visible.
+- Added README instructions with practical command examples and expected outcomes.
+
+### Why this approach
+
+- Gives repeatable, scriptable validation without relying on manual checkout submissions.
+- Lets teams compare profile strictness (`Lenient`, `Balanced`, `Strict`) quickly.
+
 ## 1.00.005 - 2026-02-27
 
 ### Objective
