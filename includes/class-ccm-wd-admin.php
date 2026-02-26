@@ -131,6 +131,14 @@ class CCM_WD_Admin {
                 <td><?php echo ! empty( $settings['enabled'] ) ? esc_html__( 'Enabled', 'ccm-woo-defender' ) : esc_html__( 'Disabled', 'ccm-woo-defender' ); ?></td>
             </tr>
             <tr>
+                <th><?php esc_html_e( 'Mode', 'ccm-woo-defender' ); ?></th>
+                <td><?php echo ! empty( $settings['advanced_mode'] ) ? esc_html__( 'Advanced', 'ccm-woo-defender' ) : esc_html__( 'Easy', 'ccm-woo-defender' ); ?></td>
+            </tr>
+            <tr>
+                <th><?php esc_html_e( 'Preset profile', 'ccm-woo-defender' ); ?></th>
+                <td><?php echo esc_html( ucfirst( (string) $settings['profile'] ) ); ?></td>
+            </tr>
+            <tr>
                 <th><?php esc_html_e( 'Tracked checkout attempts', 'ccm-woo-defender' ); ?></th>
                 <td><?php echo esc_html( (string) $stats['events_total'] ); ?></td>
             </tr>
@@ -159,10 +167,14 @@ class CCM_WD_Admin {
      * @param array<string, int|bool> $settings
      */
     private function render_settings( array $settings ): void {
+        $profiles = $this->settings->get_profile_labels();
         ?>
         <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top: 16px; max-width: 860px;">
             <input type="hidden" name="action" value="ccm_wd_save_settings" />
             <?php wp_nonce_field( 'ccm_wd_save_settings' ); ?>
+
+            <h2><?php esc_html_e( 'Easy Setup', 'ccm-woo-defender' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'Start here: choose a preset and save. Most stores should use Balanced.', 'ccm-woo-defender' ); ?></p>
 
             <table class="widefat striped">
                 <tbody>
@@ -176,10 +188,14 @@ class CCM_WD_Admin {
                     </td>
                 </tr>
                 <tr>
-                    <th><?php esc_html_e( 'Risk threshold', 'ccm-woo-defender' ); ?></th>
+                    <th><?php esc_html_e( 'Protection preset', 'ccm-woo-defender' ); ?></th>
                     <td>
-                        <input type="number" min="20" max="200" name="ccm_wd_settings[threshold]" value="<?php echo esc_attr( (string) $settings['threshold'] ); ?>" />
-                        <p class="description"><?php esc_html_e( 'Lower = stricter. Recommended range: 60 to 90.', 'ccm-woo-defender' ); ?></p>
+                        <select name="ccm_wd_settings[profile]">
+                            <?php foreach ( $profiles as $value => $label ) : ?>
+                                <option value="<?php echo esc_attr( $value ); ?>" <?php selected( (string) $settings['profile'], $value ); ?>><?php echo esc_html( $label ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description"><?php esc_html_e( 'Balanced is recommended for most stores.', 'ccm-woo-defender' ); ?></p>
                     </td>
                 </tr>
                 <tr>
@@ -189,6 +205,30 @@ class CCM_WD_Admin {
                 <tr>
                     <th><?php esc_html_e( 'Detection window (hours)', 'ccm-woo-defender' ); ?></th>
                     <td><input type="number" min="1" max="168" name="ccm_wd_settings[lookback_hours]" value="<?php echo esc_attr( (string) $settings['lookback_hours'] ); ?>" /></td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e( 'Advanced mode', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="ccm_wd_settings[advanced_mode]" value="1" <?php checked( ! empty( $settings['advanced_mode'] ) ); ?> />
+                            <?php esc_html_e( 'Enable expert controls (weights and trigger thresholds)', 'ccm-woo-defender' ); ?>
+                        </label>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <?php if ( ! empty( $settings['advanced_mode'] ) ) : ?>
+            <h2 style="margin-top: 18px;"><?php esc_html_e( 'Advanced Detection Controls', 'ccm-woo-defender' ); ?></h2>
+            <p class="description"><?php esc_html_e( 'These values override preset defaults. Lower thresholds and higher weights increase strictness.', 'ccm-woo-defender' ); ?></p>
+            <table class="widefat striped" style="margin-top: 8px;">
+                <tbody>
+                <tr>
+                    <th><?php esc_html_e( 'Risk threshold', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <input type="number" min="20" max="200" name="ccm_wd_settings[threshold]" value="<?php echo esc_attr( (string) $settings['threshold'] ); ?>" />
+                        <p class="description"><?php esc_html_e( 'Lower = stricter. Recommended range: 60 to 90.', 'ccm-woo-defender' ); ?></p>
+                    </td>
                 </tr>
                 <tr>
                     <th><?php esc_html_e( 'Suspicious address weight', 'ccm-woo-defender' ); ?></th>
@@ -240,6 +280,7 @@ class CCM_WD_Admin {
                 </tr>
                 </tbody>
             </table>
+            <?php endif; ?>
 
             <?php submit_button( __( 'Save Settings', 'ccm-woo-defender' ) ); ?>
         </form>

@@ -17,6 +17,7 @@ class CCM_WD_Analyzer {
      */
     public function evaluate( array $context ): array {
         $settings        = $this->settings->get();
+        $effective       = $this->settings->get_effective_detection_settings();
         $score           = 0;
         $reasons         = array();
         $matching_tokens = array(
@@ -40,31 +41,31 @@ class CCM_WD_Analyzer {
         $metrics          = $this->build_metrics( $events_lookback, $context );
 
         if ( ! empty( $context['address_fake'] ) ) {
-            $score    += (int) $settings['weight_suspicious_address'];
+            $score    += (int) $effective['weight_suspicious_address'];
             $reasons[] = 'suspicious_address';
         }
 
-        if ( $metrics['same_payment_attempts'] >= (int) $settings['payment_identity_min_attempts'] && $metrics['same_payment_unique_emails'] >= (int) $settings['payment_identity_min_unique_emails'] ) {
-            $score    += (int) $settings['weight_payment_identity_churn'];
+        if ( $metrics['same_payment_attempts'] >= (int) $effective['payment_identity_min_attempts'] && $metrics['same_payment_unique_emails'] >= (int) $effective['payment_identity_min_unique_emails'] ) {
+            $score    += (int) $effective['weight_payment_identity_churn'];
             $reasons[] = 'reused_gateway_amount_identity_churn';
         }
 
-        if ( $metrics['same_ip_attempts'] >= (int) $settings['ip_identity_min_attempts'] && $metrics['same_ip_unique_addresses'] >= (int) $settings['ip_identity_min_unique_addresses'] ) {
-            $score    += (int) $settings['weight_ip_identity_churn'];
+        if ( $metrics['same_ip_attempts'] >= (int) $effective['ip_identity_min_attempts'] && $metrics['same_ip_unique_addresses'] >= (int) $effective['ip_identity_min_unique_addresses'] ) {
+            $score    += (int) $effective['weight_ip_identity_churn'];
             $reasons[] = 'same_ip_multi_identity';
         }
 
-        if ( $metrics['same_ua_attempts'] >= (int) $settings['device_identity_min_attempts'] && $metrics['same_ua_unique_emails'] >= (int) $settings['device_identity_min_unique_emails'] ) {
-            $score    += (int) $settings['weight_device_identity_churn'];
+        if ( $metrics['same_ua_attempts'] >= (int) $effective['device_identity_min_attempts'] && $metrics['same_ua_unique_emails'] >= (int) $effective['device_identity_min_unique_emails'] ) {
+            $score    += (int) $effective['weight_device_identity_churn'];
             $reasons[] = 'same_device_multi_identity';
         }
 
-        if ( $metrics['blocked_attempts_recent'] >= (int) $settings['repeat_after_blocks_min_attempts'] ) {
-            $score    += (int) $settings['weight_repeat_after_blocks'];
+        if ( $metrics['blocked_attempts_recent'] >= (int) $effective['repeat_after_blocks_min_attempts'] ) {
+            $score    += (int) $effective['weight_repeat_after_blocks'];
             $reasons[] = 'repeat_after_blocks';
         }
 
-        $threshold = (int) apply_filters( 'ccm_wd_block_threshold', (int) $settings['threshold'] );
+        $threshold = (int) apply_filters( 'ccm_wd_block_threshold', (int) $effective['threshold'] );
         $blocked   = $score >= $threshold;
 
         return array(

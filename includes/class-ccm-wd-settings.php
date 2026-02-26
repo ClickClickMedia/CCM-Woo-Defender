@@ -6,7 +6,7 @@ class CCM_WD_Settings {
     private const OPTION_SETTINGS = 'ccm_wd_settings';
 
     /**
-     * @return array<string, int|bool>
+    * @return array<string, int|bool|string>
      */
     public function get(): array {
         $saved = get_option( self::OPTION_SETTINGS, array() );
@@ -20,7 +20,7 @@ class CCM_WD_Settings {
 
     /**
      * @param array<string, mixed> $raw
-     * @return array<string, int|bool>
+     * @return array<string, int|bool|string>
      */
     public function update( array $raw ): array {
         $clean = $this->sanitize( $raw );
@@ -31,9 +31,53 @@ class CCM_WD_Settings {
     /**
      * @return array<string, int|bool>
      */
+    public function get_effective_detection_settings(): array {
+        $settings = $this->get();
+        $profile  = $this->get_profile_config( (string) $settings['profile'] );
+
+        if ( ! empty( $settings['advanced_mode'] ) ) {
+            $profile = array_merge(
+                $profile,
+                array(
+                    'threshold'                          => (int) $settings['threshold'],
+                    'weight_suspicious_address'          => (int) $settings['weight_suspicious_address'],
+                    'weight_payment_identity_churn'      => (int) $settings['weight_payment_identity_churn'],
+                    'weight_ip_identity_churn'           => (int) $settings['weight_ip_identity_churn'],
+                    'weight_device_identity_churn'       => (int) $settings['weight_device_identity_churn'],
+                    'weight_repeat_after_blocks'         => (int) $settings['weight_repeat_after_blocks'],
+                    'payment_identity_min_attempts'      => (int) $settings['payment_identity_min_attempts'],
+                    'payment_identity_min_unique_emails' => (int) $settings['payment_identity_min_unique_emails'],
+                    'ip_identity_min_attempts'           => (int) $settings['ip_identity_min_attempts'],
+                    'ip_identity_min_unique_addresses'   => (int) $settings['ip_identity_min_unique_addresses'],
+                    'device_identity_min_attempts'       => (int) $settings['device_identity_min_attempts'],
+                    'device_identity_min_unique_emails'  => (int) $settings['device_identity_min_unique_emails'],
+                    'repeat_after_blocks_min_attempts'   => (int) $settings['repeat_after_blocks_min_attempts'],
+                )
+            );
+        }
+
+        return $profile;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function get_profile_labels(): array {
+        return array(
+            'lenient'  => __( 'Lenient (fewer blocks)', 'ccm-woo-defender' ),
+            'balanced' => __( 'Balanced (recommended)', 'ccm-woo-defender' ),
+            'strict'   => __( 'Strict (maximum protection)', 'ccm-woo-defender' ),
+        );
+    }
+
+    /**
+     * @return array<string, int|bool|string>
+     */
     public function defaults(): array {
         return array(
             'enabled'                                  => true,
+            'advanced_mode'                            => false,
+            'profile'                                  => 'balanced',
             'threshold'                                => 70,
             'block_duration_hours'                     => 168,
             'lookback_hours'                           => 24,
@@ -54,13 +98,20 @@ class CCM_WD_Settings {
 
     /**
      * @param array<string, mixed> $raw
-     * @return array<string, int|bool>
+     * @return array<string, int|bool|string>
      */
     private function sanitize( array $raw ): array {
         $defaults = $this->defaults();
+        $profile  = sanitize_key( (string) ( $raw['profile'] ?? $defaults['profile'] ) );
+
+        if ( ! in_array( $profile, array( 'lenient', 'balanced', 'strict' ), true ) ) {
+            $profile = (string) $defaults['profile'];
+        }
 
         return array(
             'enabled'                                  => ! empty( $raw['enabled'] ),
+            'advanced_mode'                            => ! empty( $raw['advanced_mode'] ),
+            'profile'                                  => $profile,
             'threshold'                                => $this->bounded_int( $raw['threshold'] ?? $defaults['threshold'], 20, 200 ),
             'block_duration_hours'                     => $this->bounded_int( $raw['block_duration_hours'] ?? $defaults['block_duration_hours'], 1, 720 ),
             'lookback_hours'                           => $this->bounded_int( $raw['lookback_hours'] ?? $defaults['lookback_hours'], 1, 168 ),
@@ -85,5 +136,60 @@ class CCM_WD_Settings {
     private function bounded_int( $value, int $min, int $max ): int {
         $number = absint( (string) $value );
         return max( $min, min( $max, $number ) );
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function get_profile_config( string $profile ): array {
+        $profiles = array(
+            'lenient'  => array(
+                'threshold'                          => 85,
+                'weight_suspicious_address'          => 15,
+                'weight_payment_identity_churn'      => 35,
+                'weight_ip_identity_churn'           => 30,
+                'weight_device_identity_churn'       => 20,
+                'weight_repeat_after_blocks'         => 25,
+                'payment_identity_min_attempts'      => 6,
+                'payment_identity_min_unique_emails' => 4,
+                'ip_identity_min_attempts'           => 7,
+                'ip_identity_min_unique_addresses'   => 4,
+                'device_identity_min_attempts'       => 9,
+                'device_identity_min_unique_emails'  => 5,
+                'repeat_after_blocks_min_attempts'   => 3,
+            ),
+            'balanced' => array(
+                'threshold'                          => 70,
+                'weight_suspicious_address'          => 20,
+                'weight_payment_identity_churn'      => 45,
+                'weight_ip_identity_churn'           => 40,
+                'weight_device_identity_churn'       => 30,
+                'weight_repeat_after_blocks'         => 30,
+                'payment_identity_min_attempts'      => 4,
+                'payment_identity_min_unique_emails' => 3,
+                'ip_identity_min_attempts'           => 5,
+                'ip_identity_min_unique_addresses'   => 3,
+                'device_identity_min_attempts'       => 7,
+                'device_identity_min_unique_emails'  => 4,
+                'repeat_after_blocks_min_attempts'   => 2,
+            ),
+            'strict'   => array(
+                'threshold'                          => 60,
+                'weight_suspicious_address'          => 25,
+                'weight_payment_identity_churn'      => 55,
+                'weight_ip_identity_churn'           => 50,
+                'weight_device_identity_churn'       => 40,
+                'weight_repeat_after_blocks'         => 40,
+                'payment_identity_min_attempts'      => 3,
+                'payment_identity_min_unique_emails' => 2,
+                'ip_identity_min_attempts'           => 4,
+                'ip_identity_min_unique_addresses'   => 2,
+                'device_identity_min_attempts'       => 5,
+                'device_identity_min_unique_emails'  => 3,
+                'repeat_after_blocks_min_attempts'   => 1,
+            ),
+        );
+
+        return $profiles[ $profile ] ?? $profiles['balanced'];
     }
 }

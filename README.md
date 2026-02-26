@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.002`
+`1.00.003`
 
 ## What it does
 
@@ -22,10 +22,12 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
   - repeated attempts after prior blocks.
 - Blocks high-risk attempts before order processing and stores block tokens for future attempts.
 - Learns from failed/cancelled WooCommerce orders by feeding them back into the local model.
-- Adds a WooCommerce admin page (`WooCommerce > CCM Woo Defender`) with an easy UI:
+- Adds a WooCommerce admin page (`WooCommerce > CCM Woo Defender`) with easy and advanced workflows:
   - Overview tab for live protection metrics,
-  - Settings tab for enable/disable, threshold, block duration, lookback window,
-  - editable signal weights and trigger thresholds,
+  - Easy Setup with preset profiles (`Lenient`, `Balanced`, `Strict`),
+  - Advanced Mode toggle for expert controls,
+  - Settings tab for enable/disable, block duration, lookback window,
+  - Advanced controls for editable signal weights and trigger thresholds,
   - one-click reset to defaults,
   - secure reset of Defender data.
 - Settings are stored locally (no external APIs/libraries).
@@ -47,5 +49,5 @@ All sensitive fields are hashed with HMAC + WordPress salt before storage.
 
 ## Notes
 
-- This iteration adds a guided settings UI for easier non-technical tuning.
+- This iteration adds a guided Easy Setup plus optional Advanced Mode for power users.
 - It supports both HPOS and legacy posts-based order storage through WooCommerce APIs.

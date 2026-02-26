@@ -1,5 +1,33 @@
 # AI Notes
 
+## 1.00.003 - 2026-02-27
+
+### Objective
+
+Prioritize ease of use with preset-based setup while still supporting advanced tuning for specific store risk profiles.
+
+### Implemented
+
+- Added `Easy Setup` flow with profile presets:
+	- `Lenient` (fewer false positives),
+	- `Balanced` (recommended),
+	- `Strict` (maximum defense).
+- Added `Advanced mode` toggle in settings.
+- In Easy mode, fraud detection uses profile defaults.
+- In Advanced mode, users can override profile values with manual weights and trigger thresholds.
+- Updated analyzer to read effective settings derived from preset + mode.
+- Updated Overview to show current mode and selected preset.
+
+### Why this approach
+
+- Store owners can start safely in minutes without understanding every signal.
+- Power users still get full control when needed.
+
+### Next ideas
+
+- Add contextual helper tooltips and preset preview summaries.
+- Add test-simulation panel to estimate block score with sample inputs.
+
 ## 1.00.002 - 2026-02-27
 
 ### Objective
