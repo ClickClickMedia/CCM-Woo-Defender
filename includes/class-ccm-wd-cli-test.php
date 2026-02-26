@@ -3,10 +3,37 @@
 defined( 'ABSPATH' ) || exit;
 
 class CCM_WD_CLI_Test {
+    private static ?int $original_error_reporting = null;
+
     public static function register(): void {
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
+            self::maybe_suppress_deprecations_early();
             \WP_CLI::add_command( 'ccm-wd simulate', array( __CLASS__, 'simulate' ) );
         }
+    }
+
+    private static function maybe_suppress_deprecations_early(): void {
+        if ( self::is_allow_deprecations_requested() ) {
+            return;
+        }
+
+        if ( null === self::$original_error_reporting ) {
+            self::$original_error_reporting = error_reporting();
+        }
+
+        error_reporting( self::$original_error_reporting & ~E_DEPRECATED & ~E_USER_DEPRECATED );
+    }
+
+    private static function is_allow_deprecations_requested(): bool {
+        $argv = isset( $_SERVER['argv'] ) && is_array( $_SERVER['argv'] ) ? $_SERVER['argv'] : array();
+
+        foreach ( $argv as $arg ) {
+            if ( '--allow-deprecations=1' === $arg || '--allow-deprecations' === $arg ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -47,7 +74,9 @@ class CCM_WD_CLI_Test {
         $allow_deprecations = '1' === (string) ( $assoc_args['allow-deprecations'] ?? '0' );
         $previous_reporting = error_reporting();
 
-        if ( ! $allow_deprecations ) {
+        if ( $allow_deprecations && null !== self::$original_error_reporting ) {
+            error_reporting( self::$original_error_reporting );
+        } elseif ( ! $allow_deprecations ) {
             error_reporting( $previous_reporting & ~E_DEPRECATED & ~E_USER_DEPRECATED );
         }
 

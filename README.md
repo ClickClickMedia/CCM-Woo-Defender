@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.007`
+`1.00.008`
 
 ## What it does
 
@@ -108,6 +108,7 @@ Useful variants:
 Deprecation notice handling:
 
 - By default, simulation suppresses PHP deprecation notices from external WP-CLI vendor libraries so output stays readable.
+- Suppression is now applied early during command registration so pre-command CLI rendering warnings are also reduced.
 - If you want full raw deprecation output for debugging, add:
 - `--allow-deprecations=1`
 

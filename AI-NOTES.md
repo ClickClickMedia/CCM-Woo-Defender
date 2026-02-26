@@ -1,5 +1,22 @@
 # AI Notes
 
+## 1.00.008 - 2026-02-27
+
+### Objective
+
+Fix remaining deprecation noise shown before simulator output on some WP-CLI environments.
+
+### Implemented
+
+- Moved deprecation suppression earlier in lifecycle (during CLI command registration) for `ccm-wd` commands.
+- Kept per-command override support with `--allow-deprecations=1`.
+- Updated README guidance to reflect early suppression behavior.
+
+### Why this approach
+
+- Some notices were emitted before command callback execution.
+- Early suppression catches that phase while preserving opt-in raw debugging mode.
+
 ## 1.00.007 - 2026-02-27
 
 ### Objective
