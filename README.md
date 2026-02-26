@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.009`
+`1.00.010`
 
 ## What it does
 
@@ -130,6 +130,26 @@ What success looks like:
 Tip:
 
 - Set profile to `Balanced` first, run simulation, then compare with `Strict` and `Lenient` to verify sensitivity.
+
+## Frontend blocked-flow testing (deterministic)
+
+If proxy/CDN IP forwarding makes IP-based tests inconsistent, use force-block mode to guarantee checkout is blocked.
+
+Enable force-block for 30 minutes:
+
+- `wp ccm-wd force-block --minutes=30`
+
+Check status:
+
+- `wp ccm-wd force-block-status`
+
+Now submit checkout on frontend. It should fail with Defender block message every time while active.
+
+Disable when finished:
+
+- `wp ccm-wd clear-force-block`
+
+This is the recommended way to validate customer-facing blocked UX reliably in staging.
 
 ## Notes
 

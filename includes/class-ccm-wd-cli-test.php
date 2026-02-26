@@ -9,6 +9,9 @@ class CCM_WD_CLI_Test {
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             self::maybe_suppress_deprecations_early();
             \WP_CLI::add_command( 'ccm-wd simulate', array( __CLASS__, 'simulate' ) );
+            \WP_CLI::add_command( 'ccm-wd force-block', array( __CLASS__, 'force_block' ) );
+            \WP_CLI::add_command( 'ccm-wd clear-force-block', array( __CLASS__, 'clear_force_block' ) );
+            \WP_CLI::add_command( 'ccm-wd force-block-status', array( __CLASS__, 'force_block_status' ) );
         }
     }
 
@@ -238,5 +241,73 @@ class CCM_WD_CLI_Test {
             'payment_hash' => CCM_WD_Utils::hash_token( $payment_signature ),
             'address_fake' => CCM_WD_Utils::contains_fake_address_patterns( $address1, $city, $postcode ),
         );
+    }
+
+    /**
+     * Force block all checkouts for a short period to test frontend blocked UX.
+     *
+     * ## OPTIONS
+     *
+     * [--minutes=<number>]
+     * : Number of minutes to force block all checkout attempts (default: 30).
+     *
+     * ## EXAMPLES
+     *
+     *     wp ccm-wd force-block --minutes=30
+     *
+     * @param array<int, string> $args
+     * @param array<string, string> $assoc_args
+     */
+    public static function force_block( array $args, array $assoc_args ): void {
+        $minutes = max( 1, min( 1440, absint( $assoc_args['minutes'] ?? 30 ) ) );
+        $store   = new CCM_WD_Store();
+        $until   = $store->set_force_block( $minutes * MINUTE_IN_SECONDS );
+
+        \WP_CLI::success(
+            sprintf(
+                'Force block enabled for %d minutes. Expires at %s.',
+                $minutes,
+                gmdate( 'Y-m-d H:i:s', $until ) . ' UTC'
+            )
+        );
+    }
+
+    /**
+     * Clear force block mode.
+     *
+     * ## EXAMPLES
+     *
+     *     wp ccm-wd clear-force-block
+     *
+     * @param array<int, string> $args
+     * @param array<string, string> $assoc_args
+     */
+    public static function clear_force_block( array $args, array $assoc_args ): void {
+        $store = new CCM_WD_Store();
+        $store->clear_force_block();
+        \WP_CLI::success( 'Force block disabled.' );
+    }
+
+    /**
+     * Show current force block status.
+     *
+     * ## EXAMPLES
+     *
+     *     wp ccm-wd force-block-status
+     *
+     * @param array<int, string> $args
+     * @param array<string, string> $assoc_args
+     */
+    public static function force_block_status( array $args, array $assoc_args ): void {
+        $store = new CCM_WD_Store();
+
+        if ( ! $store->is_force_block_active() ) {
+            \WP_CLI::log( 'Force block is currently OFF.' );
+            return;
+        }
+
+        $until = $store->get_force_block_until();
+        \WP_CLI::log( 'Force block is ACTIVE.' );
+        \WP_CLI::log( 'Expires: ' . gmdate( 'Y-m-d H:i:s', $until ) . ' UTC' );
     }
 }

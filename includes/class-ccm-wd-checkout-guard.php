@@ -32,6 +32,31 @@ class CCM_WD_Checkout_Guard {
             return;
         }
 
+        if ( $this->store->is_force_block_active() ) {
+            $errors->add(
+                'ccm_wd_force_blocked',
+                apply_filters(
+                    'ccm_wd_block_message',
+                    __( 'Your transaction could not be processed. Please contact support if this is an error.', 'ccm-woo-defender' )
+                )
+            );
+
+            $context = $this->build_context( $data );
+            $this->store->add_event(
+                array_merge(
+                    $context,
+                    array(
+                        'ts'      => CCM_WD_Utils::now(),
+                        'blocked' => true,
+                        'score'   => 999,
+                        'reasons' => 'force_block_active',
+                    )
+                )
+            );
+
+            return;
+        }
+
         $context    = $this->build_context( $data );
         $evaluation = $this->analyzer->evaluate( $context );
         $is_blocked = ! empty( $evaluation['blocked'] );

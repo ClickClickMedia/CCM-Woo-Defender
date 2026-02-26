@@ -1,5 +1,27 @@
 # AI Notes
 
+## 1.00.010 - 2026-02-27
+
+### Objective
+
+Provide a reliable way to test frontend blocked UX even when real client IP visibility is affected by proxy/CDN/network layers.
+
+### Implemented
+
+- Added global force-block mode in store with expiry support.
+- Checkout guard now enforces force-block before analyzer evaluation.
+- Added WP-CLI commands:
+	- `wp ccm-wd force-block --minutes=<n>`
+	- `wp ccm-wd force-block-status`
+	- `wp ccm-wd clear-force-block`
+- Added admin overview visibility for force-block status.
+- Documented deterministic frontend test flow in README.
+
+### Why this approach
+
+- Removes uncertainty from IP/header forwarding during UX validation.
+- Lets testers confirm the real customer-facing blocked behavior immediately.
+
 ## 1.00.009 - 2026-02-27
 
 ### Objective

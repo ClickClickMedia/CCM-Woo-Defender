@@ -150,6 +150,10 @@ class CCM_WD_Admin {
                 <th><?php esc_html_e( 'Active block tokens', 'ccm-woo-defender' ); ?></th>
                 <td><?php echo esc_html( (string) $stats['active_blocks'] ); ?></td>
             </tr>
+            <tr>
+                <th><?php esc_html_e( 'Force block mode', 'ccm-woo-defender' ); ?></th>
+                <td><?php echo ! empty( $stats['force_block_on'] ) ? esc_html__( 'Active', 'ccm-woo-defender' ) : esc_html__( 'Off', 'ccm-woo-defender' ); ?></td>
+            </tr>
             </tbody>
         </table>
 

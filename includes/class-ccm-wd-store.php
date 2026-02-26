@@ -5,6 +5,7 @@ defined( 'ABSPATH' ) || exit;
 class CCM_WD_Store {
     private const OPTION_EVENTS = 'ccm_wd_events';
     private const OPTION_BLOCKS = 'ccm_wd_blocks';
+    private const OPTION_FORCE_BLOCK_UNTIL = 'ccm_wd_force_block_until';
     private const MAX_EVENTS    = 2500;
     private const RETENTION_SEC = 2592000;
 
@@ -89,6 +90,37 @@ class CCM_WD_Store {
         update_option( self::OPTION_EVENTS, array(), false );
     }
 
+    public function set_force_block( int $duration_seconds ): int {
+        $duration = max( 60, $duration_seconds );
+        $until    = CCM_WD_Utils::now() + $duration;
+        update_option( self::OPTION_FORCE_BLOCK_UNTIL, $until, false );
+        return $until;
+    }
+
+    public function clear_force_block(): void {
+        delete_option( self::OPTION_FORCE_BLOCK_UNTIL );
+    }
+
+    public function is_force_block_active(): bool {
+        $until = (int) get_option( self::OPTION_FORCE_BLOCK_UNTIL, 0 );
+
+        if ( $until <= 0 ) {
+            return false;
+        }
+
+        if ( $until < CCM_WD_Utils::now() ) {
+            delete_option( self::OPTION_FORCE_BLOCK_UNTIL );
+            return false;
+        }
+
+        return true;
+    }
+
+    public function get_force_block_until(): int {
+        $until = (int) get_option( self::OPTION_FORCE_BLOCK_UNTIL, 0 );
+        return $until > 0 ? $until : 0;
+    }
+
     /**
      * @return array<string, int>
      */
@@ -106,6 +138,7 @@ class CCM_WD_Store {
             'events_total'   => count( $events ),
             'events_blocked' => $blocked_count,
             'active_blocks'  => count( $this->get_blocks() ),
+            'force_block_on' => $this->is_force_block_active() ? 1 : 0,
         );
     }
 
