@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.003`
+`1.00.005`
 
 ## What it does
 
@@ -68,6 +68,29 @@ All sensitive fields are hashed with HMAC + WordPress salt before storage.
 - `ccm_wd_block_threshold` (default from settings, initially `70`)
 - `ccm_wd_block_duration` (default from settings, initially `168 hours`)
 - `ccm_wd_block_message` (checkout error text)
+
+## GitHub release updates (WordPress auto-update integration)
+
+This plugin includes a GitHub updater (same proven method used in `ccm-tools`) so WordPress can detect new GitHub releases and show update notices in Plugins.
+
+How it works:
+
+- On update checks, it queries `https://api.github.com/repos/ClickClickMedia/CCM-Woo-Defender/releases/latest`.
+- It compares the latest release tag (e.g. `v1.00.005`) with the installed plugin version.
+- If newer, it injects update data into WordPress plugin update transients.
+- The plugin details popup (`View details`) is also populated from the release metadata/changelog.
+
+Force check manually:
+
+- Open `wp-admin/plugins.php?force-check=1`
+- or `wp-admin/update-core.php?force-check=1`
+
+This clears updater/transient caches and forces WordPress to fetch fresh release data immediately.
+
+Optional GitHub token:
+
+- For higher API limits (or private repo scenarios), define in `wp-config.php`:
+- `define('CCM_WD_GITHUB_TOKEN', 'your_token_here');`
 
 ## Notes
 

@@ -1,5 +1,32 @@
 # AI Notes
 
+## 1.00.005 - 2026-02-27
+
+### Objective
+
+Add GitHub release-based plugin update detection in WordPress and support forced refresh via `?force-check=1`, following the same updater approach used in `ccm-tools`.
+
+### Implemented
+
+- Added dedicated updater class: `includes/class-ccm-wd-updater.php`.
+- Hooked updater into WordPress plugin update lifecycle:
+	- `pre_set_site_transient_update_plugins`,
+	- `site_transient_update_plugins`,
+	- `plugins_api`,
+	- `upgrader_post_install`,
+	- GitHub HTTP auth/header hooks.
+- Added force-check handling for:
+	- `plugins.php?force-check=1`,
+	- `update-core.php?force-check=1`.
+- Added early `admin_init` cache-bust path to clear updater and update transients.
+- Bootstrapped updater from main plugin file and documented behavior in README.
+
+### Why this approach
+
+- Matches known-good implementation pattern already validated in your `ccm-tools` workflow.
+- Gives reliable update visibility directly in WordPress Plugins screen.
+- Keeps manual override (`force-check=1`) for immediate refresh during release verification.
+
 ## 1.00.004 - 2026-02-27
 
 ### Objective
