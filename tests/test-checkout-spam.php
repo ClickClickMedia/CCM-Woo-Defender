@@ -4,7 +4,7 @@
  * CCM Woo Defender – Front-end Checkout Spam Tester
  *
  * Simulates fraud-like checkout attempts via the WooCommerce Store API
- * to verify that Defender detects and blocks the pattern.
+ * to verify that Woo Defender detects and blocks the pattern.
  *
  * This sends REAL HTTP requests to your site's /wp-json/wc/store/v1/checkout
  * endpoint, just like a browser would. Orders that get through will be created
@@ -216,7 +216,7 @@ function classify_result( array $result ): array {
         return array( 'status' => 'error', 'detail' => 'cURL: ' . $result['error'] );
     }
 
-    // Defender block (HTTP 403 with our error codes).
+    // Woo Defender block (HTTP 403 with our error codes).
     if ( 403 === $code ) {
         $error_code = $body['code'] ?? '';
         if ( str_starts_with( $error_code, 'ccm_wd_' ) ) {
@@ -230,7 +230,7 @@ function classify_result( array $result ): array {
         return array( 'status' => 'passed', 'detail' => 'Order #' . $body['order_id'] . ' created' );
     }
 
-    // WooCommerce validation error (not Defender).
+    // WooCommerce validation error (not Woo Defender).
     if ( $code >= 400 ) {
         $msg = $body['message'] ?? ( $body['data']['message'] ?? 'unknown error' );
         $error_code = $body['code'] ?? 'http_' . $code;
@@ -279,7 +279,7 @@ function main(): int {
         echo c_bold( "\nCCM Woo Defender – Checkout Spam Tester\n" );
         echo c_dim( str_repeat( '─', 50 ) ) . "\n\n";
         echo "Simulates fraud-like checkout attempts via the WooCommerce Store API\n";
-        echo "to verify that Defender detects and blocks the pattern.\n\n";
+        echo "to verify that Woo Defender detects and blocks the pattern.\n\n";
         echo c_yellow( "Usage:\n" );
         echo "  php test-checkout-spam.php --url=https://your-site.com --product=123\n\n";
         echo c_yellow( "Required:\n" );
@@ -416,7 +416,7 @@ function main(): int {
     echo "  Errors:  " . c_yellow( (string) $errors ) . "\n\n";
 
     if ( $blocked > 0 ) {
-        echo c_green( "  ✓ Defender is blocking checkout spam!" ) . "\n\n";
+        echo c_green( "  ✓ Woo Defender is blocking checkout spam!" ) . "\n\n";
     } elseif ( 0 === $errors ) {
         echo c_yellow( "  ⚠ No attempts were blocked. Check that:" ) . "\n";
         echo c_dim( "    - Protection is enabled in WooCommerce > CCM Woo Defender > Settings\n" );

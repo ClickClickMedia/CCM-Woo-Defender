@@ -61,7 +61,7 @@ class CCM_WD_CLI_Test {
      * : Source IP to use for simulation (default: 169.148.67.2).
      *
      * [--clear-first=<0|1>]
-     * : Clear Defender events/blocks before simulation (default: 1).
+     * : Clear Woo Defender events/blocks before simulation (default: 1).
     *
     * [--profile=<lenient|balanced|strict>]
     * : Run simulation with a specific preset profile (temporary override).
@@ -115,7 +115,7 @@ class CCM_WD_CLI_Test {
                 if ( $clear_first ) {
                     $store->clear_events();
                     $store->clear_blocks();
-                    \WP_CLI::log( sprintf( 'Cleared existing Defender events and blocks for profile: %s', $profile ) );
+                    \WP_CLI::log( sprintf( 'Cleared existing Woo Defender events and blocks for profile: %s', $profile ) );
                 }
 
                 if ( count( $profiles_to_run ) > 1 ) {

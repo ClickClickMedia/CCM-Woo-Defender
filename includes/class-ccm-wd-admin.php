@@ -150,7 +150,7 @@ class CCM_WD_Admin {
             <div class="ccm-wd-content">
 
                 <?php if ( isset( $_GET['cleared'] ) ) : ?>
-                    <div class="ccm-wd-alert ccm-wd-alert-success"><p><?php esc_html_e( 'Defender events and blocks were cleared.', 'ccm-woo-defender' ); ?></p></div>
+                    <div class="ccm-wd-alert ccm-wd-alert-success"><p><?php esc_html_e( 'Woo Defender events and blocks were cleared.', 'ccm-woo-defender' ); ?></p></div>
                 <?php endif; ?>
                 <?php if ( isset( $_GET['saved'] ) ) : ?>
                     <div class="ccm-wd-alert ccm-wd-alert-success"><p><?php esc_html_e( 'Settings saved successfully.', 'ccm-woo-defender' ); ?></p></div>
@@ -301,9 +301,9 @@ class CCM_WD_Admin {
             <?php endif; ?>
         </div>
 
-        <!-- How Defender Works -->
+        <!-- How Woo Defender Works -->
         <div class="ccm-wd-card">
-            <h2><?php esc_html_e( 'How Defender Works', 'ccm-woo-defender' ); ?></h2>
+            <h2><?php esc_html_e( 'How Woo Defender Works', 'ccm-woo-defender' ); ?></h2>
             <div class="ccm-wd-alert ccm-wd-alert-info">
                 <div>
                     <p><strong><?php esc_html_e( 'Simple version:', 'ccm-woo-defender' ); ?></strong></p>
@@ -326,8 +326,8 @@ class CCM_WD_Admin {
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <input type="hidden" name="action" value="ccm_wd_clear_data" />
                 <?php wp_nonce_field( 'ccm_wd_clear_data' ); ?>
-                <button type="submit" class="ccm-wd-button ccm-wd-button-danger" onclick="return confirm('<?php echo esc_js( __( 'Clear all Defender data? This cannot be undone.', 'ccm-woo-defender' ) ); ?>');">
-                    <?php esc_html_e( 'Clear Defender Data', 'ccm-woo-defender' ); ?>
+                <button type="submit" class="ccm-wd-button ccm-wd-button-danger" onclick="return confirm('<?php echo esc_js( __( 'Clear all Woo Defender data? This cannot be undone.', 'ccm-woo-defender' ) ); ?>');">
+                    <?php esc_html_e( 'Clear Woo Defender Data', 'ccm-woo-defender' ); ?>
                 </button>
             </form>
         </div>

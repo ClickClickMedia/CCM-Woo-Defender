@@ -29,14 +29,14 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
   - Settings tab for enable/disable, block duration, lookback window,
   - Advanced controls for editable signal weights and trigger thresholds,
   - one-click reset to defaults,
-  - secure reset of Defender data.
+  - secure reset of Woo Defender data.
 - Settings are stored locally (no external APIs/libraries).
 
 ## How and why it works (plain English)
 
 Most checkout attacks are no longer simple high-speed bursts. Attackers often place attempts slowly, changing names and addresses, to avoid normal rate limits.
 
-Defender handles this by combining multiple signals at the same time:
+Woo Defender handles this by combining multiple signals at the same time:
 
 - transaction pattern signals (same gateway + same amount + same country),
 - identity churn signals (many different emails/names/addresses around one stable payment pattern),
@@ -46,11 +46,11 @@ Defender handles this by combining multiple signals at the same time:
 
 Each signal contributes to a risk score. If the score crosses the threshold, checkout is blocked before payment processing continues.
 
-After that, Defender temporarily blocks linked fingerprints (hashed tokens) so the same abuse pattern cannot keep retrying under slightly changed details.
+After that, Woo Defender temporarily blocks linked fingerprints (hashed tokens) so the same abuse pattern cannot keep retrying under slightly changed details.
 
-Defender also records failed/cancelled outcomes to improve future scoring against your real fraud behavior.
+Woo Defender also records failed/cancelled outcomes to improve future scoring against your real fraud behavior.
 
-Why this is effective: even when attempts are spread out over hours, fraud campaigns still reuse stable patterns (gateway, amount, device, network behavior). Defender targets those stable correlations rather than relying on speed alone.
+Why this is effective: even when attempts are spread out over hours, fraud campaigns still reuse stable patterns (gateway, amount, device, network behavior). Woo Defender targets those stable correlations rather than relying on speed alone.
 
 Privacy model: sensitive values are stored as HMAC hashes, not raw PII.
 
@@ -94,7 +94,7 @@ Optional GitHub token:
 
 ## How to test blocking automatically (WP-CLI)
 
-Defender now includes a simulation command that generates fraud-like attempts and prints scoring/block decisions.
+Woo Defender now includes a simulation command that generates fraud-like attempts and prints scoring/block decisions.
 
 Run from your WordPress root:
 
@@ -143,7 +143,7 @@ Check status:
 
 - `wp ccm-wd force-block-status`
 
-Now submit checkout on frontend. It should fail with Defender block message every time while active.
+Now submit checkout on frontend. It should fail with Woo Defender block message every time while active.
 
 Disable when finished:
 
@@ -176,7 +176,7 @@ The Overview tab also shows:
 
 ## Runtime IP diagnostics
 
-If an expected IP block does not trigger, check what IP Defender actually sees:
+If an expected IP block does not trigger, check what IP Woo Defender actually sees:
 
 - `wp ccm-wd runtime-ip`
 
