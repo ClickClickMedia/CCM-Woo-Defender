@@ -25,6 +25,22 @@
 
 ---
 
+## 1.2.3 - 2026-02-27
+
+### Objective
+
+Fix History tab timestamps to use the WordPress site timezone instead of UTC.
+
+### Fixed
+
+- Replaced `gmdate()` with `wp_date()` in History tab date/time rendering so timestamps display in the site's configured timezone (e.g. Australia/Sydney) instead of UTC. Removed the hardcoded "UTC" suffix.
+
+### Note on IP addresses
+
+- Events stored before the `client_ip` field was added (pre-1.2.0) will continue to show "N/A" for IP Address. This is expected — new events record IPs correctly.
+
+---
+
 ## 1.2.2 - 2026-02-27
 
 ### Objective

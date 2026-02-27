@@ -392,8 +392,8 @@ class CCM_WD_Admin {
                                 <tr class="<?php echo $blocked ? 'ccm-wd-row-blocked' : 'ccm-wd-row-allowed'; ?>">
                                     <td class="ccm-wd-history-date">
                                         <?php if ( $ts > 0 ) : ?>
-                                            <span class="ccm-wd-date-primary"><?php echo esc_html( gmdate( 'M j, Y', $ts ) ); ?></span>
-                                            <span class="ccm-wd-date-secondary"><?php echo esc_html( gmdate( 'H:i:s', $ts ) ); ?> UTC</span>
+                                            <span class="ccm-wd-date-primary"><?php echo esc_html( wp_date( 'M j, Y', $ts ) ); ?></span>
+                                            <span class="ccm-wd-date-secondary"><?php echo esc_html( wp_date( 'H:i:s', $ts ) ); ?></span>
                                         <?php else : ?>
                                             <span class="ccm-wd-text-muted">&mdash;</span>
                                         <?php endif; ?>
