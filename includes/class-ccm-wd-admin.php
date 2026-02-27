@@ -151,16 +151,22 @@ class CCM_WD_Admin {
         <div class="wrap ccm-wd">
 
             <div class="ccm-wd-header">
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender' ) ); ?>" class="ccm-wd-header-logo">
-                    <img src="<?php echo esc_url( plugin_dir_url( CCM_WD_FILE ) . 'assets/logo.svg' ); ?>" alt="Click Click Media">
-                </a>
-                <h1 class="ccm-wd-header-title"><?php esc_html_e( 'Woo Defender', 'ccm-woo-defender' ); ?></h1>
-                <div class="ccm-wd-tabs">
-                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview' ) ); ?>" class="ccm-wd-tab <?php echo 'overview' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Overview', 'ccm-woo-defender' ); ?></a>
-                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=history' ) ); ?>" class="ccm-wd-tab <?php echo 'history' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'History', 'ccm-woo-defender' ); ?></a>
-                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=settings' ) ); ?>" class="ccm-wd-tab <?php echo 'settings' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Settings', 'ccm-woo-defender' ); ?></a>
+                <div class="ccm-wd-header-left">
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender' ) ); ?>" class="ccm-wd-header-logo">
+                        <img src="<?php echo esc_url( plugin_dir_url( CCM_WD_FILE ) . 'assets/logo.svg' ); ?>" alt="Click Click Media">
+                    </a>
                 </div>
-                <span class="ccm-wd-version">v<?php echo esc_html( CCM_WD_VERSION ); ?></span>
+                <div class="ccm-wd-header-center">
+                    <h1 class="ccm-wd-header-title"><?php esc_html_e( 'Woo Defender', 'ccm-woo-defender' ); ?></h1>
+                </div>
+                <div class="ccm-wd-header-right">
+                    <div class="ccm-wd-tabs">
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview' ) ); ?>" class="ccm-wd-tab <?php echo 'overview' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Overview', 'ccm-woo-defender' ); ?></a>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=history' ) ); ?>" class="ccm-wd-tab <?php echo 'history' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'History', 'ccm-woo-defender' ); ?></a>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=settings' ) ); ?>" class="ccm-wd-tab <?php echo 'settings' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Settings', 'ccm-woo-defender' ); ?></a>
+                    </div>
+                    <span class="ccm-wd-version">v<?php echo esc_html( CCM_WD_VERSION ); ?></span>
+                </div>
             </div>
 
             <div class="ccm-wd-content">

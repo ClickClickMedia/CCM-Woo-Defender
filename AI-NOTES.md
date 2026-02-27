@@ -25,6 +25,11 @@
 
 ---
 
+## 1.2.8 - 2026-02-27
+
+### Changed
+- Header layout: three-div structure (left/center/right) for proper logo left, title centre, menu+version right alignment.
+
 ## 1.2.7 - 2026-02-27
 
 ### Changed
