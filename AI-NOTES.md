@@ -25,6 +25,19 @@
 
 ---
 
+## 1.2.4 - 2026-02-27
+
+### Objective
+
+Prevent IP addresses from wrapping in the History table.
+
+### Fixed
+
+- Changed `.ccm-wd-ip-code` from `word-break: break-all` to `white-space: nowrap` so IP addresses always display on one line.
+- Increased history table `min-width` from 820px to 960px to accommodate the wider IP column.
+
+---
+
 ## 1.2.3 - 2026-02-27
 
 ### Objective

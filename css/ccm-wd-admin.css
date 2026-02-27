@@ -1094,7 +1094,7 @@
 
 .ccm-wd-history-table {
 	margin: 0;
-	min-width: 820px;
+	min-width: 960px;
 }
 
 .ccm-wd-history-table thead th {
@@ -1159,7 +1159,7 @@
 	border: 1px solid var(--ccm-wd-border);
 	border-radius: var(--ccm-wd-radius-sm);
 	color: var(--ccm-wd-text);
-	word-break: break-all;
+	white-space: nowrap;
 }
 
 /* Country badge */
