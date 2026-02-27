@@ -25,6 +25,11 @@
 
 ---
 
+## 1.2.7 - 2026-02-27
+
+### Changed
+- Admin header layout: logo left, title centre, navigation tabs, version badge far right.
+
 ## 1.2.6 - 2026-02-27
 
 ### Added
