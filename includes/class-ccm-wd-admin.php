@@ -42,7 +42,7 @@ class CCM_WD_Admin {
         wp_enqueue_style(
             'ccm-wd-admin',
             plugin_dir_url( CCM_WD_FILE ) . 'css/ccm-wd-admin.css',
-            array(),
+            array( 'dashicons' ),
             CCM_WD_VERSION
         );
 
@@ -427,12 +427,15 @@ class CCM_WD_Admin {
             <!-- Advanced Detection Controls Card -->
             <div id="ccm-wd-advanced-card" class="ccm-wd-card" style="<?php echo empty( $settings['advanced_mode'] ) ? 'display:none;' : ''; ?>">
                 <h2><?php esc_html_e( 'Advanced Detection Controls', 'ccm-woo-defender' ); ?></h2>
-                <p><?php esc_html_e( 'These values override preset defaults. Lower thresholds and higher weights increase strictness.', 'ccm-woo-defender' ); ?></p>
+                <p class="ccm-wd-text-muted"><?php esc_html_e( 'These values override preset defaults. Lower thresholds and higher weights increase strictness.', 'ccm-woo-defender' ); ?></p>
 
                 <h3><?php esc_html_e( 'Risk Threshold', 'ccm-woo-defender' ); ?></h3>
                 <div class="ccm-wd-setting-row">
                     <div class="ccm-wd-setting-info">
-                        <strong><?php esc_html_e( 'Risk Threshold', 'ccm-woo-defender' ); ?></strong>
+                        <strong>
+                            <?php esc_html_e( 'Risk Threshold', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="threshold" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
                         <p class="ccm-wd-text-muted"><?php esc_html_e( 'Lower = stricter. Recommended range: 60 to 90.', 'ccm-woo-defender' ); ?></p>
                     </div>
                     <div class="ccm-wd-setting-control">
@@ -441,60 +444,151 @@ class CCM_WD_Admin {
                 </div>
 
                 <h3><?php esc_html_e( 'Signal Weights', 'ccm-woo-defender' ); ?></h3>
-                <table class="ccm-wd-form-table">
-                    <tr>
-                        <th><?php esc_html_e( 'Suspicious address', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_suspicious_address]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_suspicious_address'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Gateway + amount identity churn', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_payment_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_payment_identity_churn'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Same IP identity churn', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_ip_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_ip_identity_churn'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Same device identity churn', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_device_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_device_identity_churn'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Repeat-after-blocks', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="0" max="100" name="ccm_wd_settings[weight_repeat_after_blocks]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_repeat_after_blocks'] ); ?>" /></td>
-                    </tr>
-                </table>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Suspicious address', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="weight_suspicious_address" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="0" max="100" name="ccm_wd_settings[weight_suspicious_address]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_suspicious_address'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Gateway + amount identity churn', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="weight_payment_identity_churn" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="0" max="100" name="ccm_wd_settings[weight_payment_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_payment_identity_churn'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Same IP identity churn', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="weight_ip_identity_churn" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="0" max="100" name="ccm_wd_settings[weight_ip_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_ip_identity_churn'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Same device identity churn', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="weight_device_identity_churn" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="0" max="100" name="ccm_wd_settings[weight_device_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_device_identity_churn'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Repeat-after-blocks', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="weight_repeat_after_blocks" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="0" max="100" name="ccm_wd_settings[weight_repeat_after_blocks]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_repeat_after_blocks'] ); ?>" />
+                    </div>
+                </div>
 
                 <h3><?php esc_html_e( 'Trigger Thresholds', 'ccm-woo-defender' ); ?></h3>
-                <table class="ccm-wd-form-table">
-                    <tr>
-                        <th><?php esc_html_e( 'Gateway + amount min attempts', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="2" max="30" name="ccm_wd_settings[payment_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['payment_identity_min_attempts'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Gateway + amount min unique emails', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="2" max="20" name="ccm_wd_settings[payment_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['payment_identity_min_unique_emails'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Same IP min attempts', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="2" max="30" name="ccm_wd_settings[ip_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_attempts'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Same IP min unique addresses', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="2" max="20" name="ccm_wd_settings[ip_identity_min_unique_addresses]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_unique_addresses'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Same device min attempts', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="2" max="30" name="ccm_wd_settings[device_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_attempts'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Same device min unique emails', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="2" max="20" name="ccm_wd_settings[device_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_unique_emails'] ); ?>" /></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Repeat-after-blocks min attempts', 'ccm-woo-defender' ); ?></th>
-                        <td><input type="number" min="1" max="20" name="ccm_wd_settings[repeat_after_blocks_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['repeat_after_blocks_min_attempts'] ); ?>" /></td>
-                    </tr>
-                </table>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Gateway + amount min attempts', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="payment_identity_min_attempts" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="2" max="30" name="ccm_wd_settings[payment_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['payment_identity_min_attempts'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Gateway + amount min unique emails', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="payment_identity_min_unique_emails" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="2" max="20" name="ccm_wd_settings[payment_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['payment_identity_min_unique_emails'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Same IP min attempts', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="ip_identity_min_attempts" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="2" max="30" name="ccm_wd_settings[ip_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_attempts'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Same IP min unique addresses', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="ip_identity_min_unique_addresses" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="2" max="20" name="ccm_wd_settings[ip_identity_min_unique_addresses]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_unique_addresses'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Same device min attempts', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="device_identity_min_attempts" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="2" max="30" name="ccm_wd_settings[device_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_attempts'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Same device min unique emails', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="device_identity_min_unique_emails" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="2" max="20" name="ccm_wd_settings[device_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_unique_emails'] ); ?>" />
+                    </div>
+                </div>
+                <div class="ccm-wd-setting-row">
+                    <div class="ccm-wd-setting-info">
+                        <strong>
+                            <?php esc_html_e( 'Repeat-after-blocks min attempts', 'ccm-woo-defender' ); ?>
+                            <button type="button" class="ccm-wd-info-btn" data-modal="repeat_after_blocks_min_attempts" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
+                        </strong>
+                    </div>
+                    <div class="ccm-wd-setting-control">
+                        <input type="number" min="1" max="20" name="ccm_wd_settings[repeat_after_blocks_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['repeat_after_blocks_min_attempts'] ); ?>" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Modal (shared, populated by JS) -->
+            <div id="ccm-wd-modal-overlay" class="ccm-wd-modal-overlay" style="display:none;">
+                <div class="ccm-wd-modal">
+                    <div class="ccm-wd-modal-header">
+                        <strong id="ccm-wd-modal-title"></strong>
+                        <button type="button" id="ccm-wd-modal-close" class="ccm-wd-modal-close">&times;</button>
+                    </div>
+                    <div id="ccm-wd-modal-body" class="ccm-wd-modal-body"></div>
+                </div>
             </div>
 
             <!-- Save / Reset Buttons -->

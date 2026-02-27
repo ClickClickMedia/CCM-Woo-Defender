@@ -1,5 +1,27 @@
 # AI Notes
 
+## 1.00.016 - 2026-02-27
+
+### Objective
+
+Clean up the Advanced Detection Controls layout for consistent alignment, and add info-icon modals explaining each option.
+
+### Implemented
+
+- Replaced `<table class="ccm-wd-form-table">` markup for Signal Weights and Trigger Thresholds with `ccm-wd-setting-row` flex rows (same layout as Risk Threshold / Easy Setup). All value inputs are now right-aligned in a consistent column.
+- Added a Dashicons `info-outline` button next to every advanced setting label (`data-modal="key"`).
+- Added a shared modal overlay (`#ccm-wd-modal-overlay`) rendered once at the end of the settings form; populated dynamically by JS.
+- New CSS: `.ccm-wd-info-btn` (inline icon button), `.ccm-wd-modal-overlay` (fixed backdrop with fade-in animation), `.ccm-wd-modal` (centered card with slide-up animation), `.ccm-wd-modal-header`, `.ccm-wd-modal-close`, `.ccm-wd-modal-body`.
+- Expanded `js/ccm-wd-admin.js` with an `infoContent` object containing plain-English descriptions for all 14 advanced settings, plus `openModal()` / `closeModal()` helpers, delegated click on `.ccm-wd-info-btn`, overlay click-to-dismiss, and Escape key support.
+- Enqueued `dashicons` as a CSS dependency so the info icon renders on the plugin page.
+
+### Why this approach
+
+- Flex rows give pixel-perfect right-alignment of all number inputs without relying on table column widths.
+- A single shared modal element avoids 14 separate hidden panels in the DOM.
+- Delegated click handling means info buttons work even if the advanced card is toggled in/out dynamically.
+- Dashicons is already shipped with WordPress admin — zero extra weight.
+
 ## 1.00.015 - 2026-02-27
 
 ### Objective

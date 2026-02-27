@@ -674,6 +674,114 @@
 }
 
 /* ===================================
+   Info Button
+   =================================== */
+.ccm-wd-info-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: none;
+	padding: 0;
+	margin-left: var(--ccm-wd-space-xs);
+	cursor: pointer;
+	color: var(--ccm-wd-text-light);
+	vertical-align: middle;
+	transition: color var(--ccm-wd-transition-fast);
+	line-height: 1;
+}
+
+.ccm-wd-info-btn:hover,
+.ccm-wd-info-btn:focus {
+	color: var(--ccm-wd-primary);
+	outline: none;
+}
+
+.ccm-wd-info-btn .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+/* ===================================
+   Info Modal
+   =================================== */
+.ccm-wd-modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(15, 23, 42, 0.5);
+	z-index: 100100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	animation: ccmWdFadeIn .15s ease;
+}
+
+@keyframes ccmWdFadeIn {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+.ccm-wd-modal {
+	background: var(--ccm-wd-surface);
+	border-radius: var(--ccm-wd-radius-lg);
+	box-shadow: var(--ccm-wd-shadow-lg);
+	width: 92%;
+	max-width: 480px;
+	max-height: 80vh;
+	overflow-y: auto;
+	animation: ccmWdSlideUp .2s ease;
+}
+
+@keyframes ccmWdSlideUp {
+	from { opacity: 0; transform: translateY(12px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.ccm-wd-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--ccm-wd-space-md) var(--ccm-wd-space-lg);
+	border-bottom: 1px solid var(--ccm-wd-border);
+}
+
+.ccm-wd-modal-header strong {
+	font-size: var(--ccm-wd-text-base);
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-modal-close {
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+	line-height: 1;
+	color: var(--ccm-wd-text-muted);
+	cursor: pointer;
+	padding: 0;
+	transition: color var(--ccm-wd-transition-fast);
+}
+
+.ccm-wd-modal-close:hover {
+	color: var(--ccm-wd-error);
+}
+
+.ccm-wd-modal-body {
+	padding: var(--ccm-wd-space-lg);
+	font-size: var(--ccm-wd-text-sm);
+	line-height: 1.7;
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-modal-body p {
+	margin: 0 0 var(--ccm-wd-space-sm);
+}
+
+.ccm-wd-modal-body p:last-child {
+	margin-bottom: 0;
+}
+
+/* ===================================
    IP List
    =================================== */
 .ccm-wd-ip-list {
