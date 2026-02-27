@@ -25,6 +25,12 @@
 
 ---
 
+## 1.3.0 - 2026-02-27
+
+### Added
+- Order number and order status columns in History tab (linked to WC edit order page).
+- `order_id` stored in all checkout events for traceability.
+
 ## 1.2.9 - 2026-02-27
 
 ### Fixed

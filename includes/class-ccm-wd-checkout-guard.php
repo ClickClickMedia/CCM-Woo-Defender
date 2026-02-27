@@ -84,6 +84,7 @@ class CCM_WD_Checkout_Guard {
                     $context,
                     array(
                         'ts'            => CCM_WD_Utils::now(),
+                        'order_id'      => 0,
                         'blocked'       => true,
                         'score'         => 999,
                         'reasons'       => 'manual_ip_block',
@@ -114,6 +115,7 @@ class CCM_WD_Checkout_Guard {
                     $context,
                     array(
                         'ts'            => CCM_WD_Utils::now(),
+                        'order_id'      => 0,
                         'blocked'       => true,
                         'score'         => 999,
                         'reasons'       => 'geoip_country_block:' . $geo_result['country'],
@@ -156,6 +158,7 @@ class CCM_WD_Checkout_Guard {
             $context,
             array(
                 'ts'            => CCM_WD_Utils::now(),
+                'order_id'      => 0,
                 'blocked'       => $is_blocked,
                 'score'         => (int) ( $evaluation['score'] ?? 0 ),
                 'reasons'       => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
@@ -195,6 +198,7 @@ class CCM_WD_Checkout_Guard {
                     $context,
                     array(
                         'ts'            => CCM_WD_Utils::now(),
+                        'order_id'      => $order->get_id(),
                         'blocked'       => true,
                         'score'         => 999,
                         'reasons'       => 'manual_ip_block',
@@ -216,6 +220,7 @@ class CCM_WD_Checkout_Guard {
                     $context,
                     array(
                         'ts'            => CCM_WD_Utils::now(),
+                        'order_id'      => $order->get_id(),
                         'blocked'       => true,
                         'score'         => 999,
                         'reasons'       => 'geoip_country_block:' . $geo_result['country'],
@@ -252,6 +257,7 @@ class CCM_WD_Checkout_Guard {
                 $context,
                 array(
                     'ts'            => CCM_WD_Utils::now(),
+                    'order_id'      => $order->get_id(),
                     'blocked'       => $is_blocked,
                     'score'         => (int) ( $evaluation['score'] ?? 0 ),
                     'reasons'       => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
@@ -453,6 +459,7 @@ class CCM_WD_Checkout_Guard {
 
         $event = array(
             'ts'            => CCM_WD_Utils::now(),
+            'order_id'      => $order_id,
             'gateway'       => $gateway,
             'country'       => $country,
             'total'         => $total,

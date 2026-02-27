@@ -1124,7 +1124,7 @@
 
 .ccm-wd-history-table {
 	margin: 0;
-	min-width: 960px;
+	min-width: 1100px;
 }
 
 .ccm-wd-history-table thead th {
@@ -1178,6 +1178,48 @@
 	display: block;
 	font-size: var(--ccm-wd-text-xs);
 	color: var(--ccm-wd-text-light);
+}
+
+/* Order column */
+.ccm-wd-history-order {
+	white-space: nowrap;
+}
+
+.ccm-wd-order-link {
+	font-weight: 600;
+	color: var(--ccm-wd-primary);
+	text-decoration: none;
+	font-size: var(--ccm-wd-text-sm);
+}
+
+.ccm-wd-order-link:hover {
+	text-decoration: underline;
+}
+
+.ccm-wd-order-status {
+	display: block;
+	font-size: var(--ccm-wd-text-xs);
+	font-weight: 500;
+	margin-top: 2px;
+}
+
+.ccm-wd-order-status--processing {
+	color: #2563eb;
+}
+
+.ccm-wd-order-status--completed,
+.ccm-wd-order-status--on-hold {
+	color: var(--ccm-wd-success);
+}
+
+.ccm-wd-order-status--cancelled,
+.ccm-wd-order-status--failed,
+.ccm-wd-order-status--refunded {
+	color: var(--ccm-wd-danger);
+}
+
+.ccm-wd-order-status--pending {
+	color: var(--ccm-wd-warning);
 }
 
 /* IP code */

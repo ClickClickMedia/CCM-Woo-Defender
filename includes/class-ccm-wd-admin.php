@@ -351,6 +351,7 @@ class CCM_WD_Admin {
                         <thead>
                             <tr>
                                 <th><?php esc_html_e( 'Date / Time', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Order', 'ccm-woo-defender' ); ?></th>
                                 <th><?php esc_html_e( 'IP Address', 'ccm-woo-defender' ); ?></th>
                                 <th><?php esc_html_e( 'Country', 'ccm-woo-defender' ); ?></th>
                                 <th><?php esc_html_e( 'Gateway', 'ccm-woo-defender' ); ?></th>
@@ -364,6 +365,7 @@ class CCM_WD_Admin {
                             <?php foreach ( $events as $event ) : ?>
                                 <?php
                                 $ts            = (int) ( $event['ts'] ?? 0 );
+                                $event_order_id = (int) ( $event['order_id'] ?? 0 );
                                 $client_ip     = (string) ( $event['client_ip'] ?? '' );
                                 $geoip_country = (string) ( $event['geoip_country'] ?? '' );
                                 $billing_country = (string) ( $event['country'] ?? '' );
@@ -401,6 +403,23 @@ class CCM_WD_Admin {
                                         <?php if ( $ts > 0 ) : ?>
                                             <span class="ccm-wd-date-primary"><?php echo esc_html( wp_date( 'M j, Y', $ts ) ); ?></span>
                                             <span class="ccm-wd-date-secondary"><?php echo esc_html( wp_date( 'H:i:s', $ts ) ); ?></span>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted">&mdash;</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="ccm-wd-history-order">
+                                        <?php if ( $event_order_id > 0 ) :
+                                            $wc_order = wc_get_order( $event_order_id );
+                                            if ( $wc_order ) :
+                                                $order_number = $wc_order->get_order_number();
+                                                $order_status = wc_get_order_status_name( $wc_order->get_status() );
+                                                $order_url    = $wc_order->get_edit_order_url();
+                                        ?>
+                                            <a href="<?php echo esc_url( $order_url ); ?>" class="ccm-wd-order-link" title="<?php echo esc_attr( $order_status ); ?>">#<?php echo esc_html( $order_number ); ?></a>
+                                            <span class="ccm-wd-order-status ccm-wd-order-status--<?php echo esc_attr( sanitize_html_class( $wc_order->get_status() ) ); ?>"><?php echo esc_html( $order_status ); ?></span>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted">#<?php echo esc_html( (string) $event_order_id ); ?></span>
+                                        <?php endif; ?>
                                         <?php else : ?>
                                             <span class="ccm-wd-text-muted">&mdash;</span>
                                         <?php endif; ?>

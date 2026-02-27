@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'CCM_WD_VERSION' ) ) {
-    define( 'CCM_WD_VERSION', '1.2.9' );
+    define( 'CCM_WD_VERSION', '1.3.0' );
 }
 
 if ( ! defined( 'CCM_WD_FILE' ) ) {
