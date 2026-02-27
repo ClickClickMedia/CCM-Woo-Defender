@@ -438,6 +438,9 @@ class CCM_WD_Admin {
                 </div>
             </div>
 
+            <!-- GeoIP Country Blocking Card -->
+            <?php $this->render_geoip_card( $settings ); ?>
+
             <!-- Advanced Detection Controls Card -->
             <div id="ccm-wd-advanced-card" class="ccm-wd-card" style="<?php echo empty( $settings['advanced_mode'] ) ? 'display:none;' : ''; ?>">
                 <h2><?php esc_html_e( 'Advanced Detection Controls', 'ccm-woo-defender' ); ?></h2>
@@ -622,6 +625,164 @@ class CCM_WD_Admin {
                 </button>
             </div>
         </form>
+        <?php
+    }
+
+    /**
+     * Render the GeoIP Country Blocking settings card.
+     *
+     * @param array<string, mixed> $settings
+     */
+    private function render_geoip_card( array $settings ): void {
+        $countries        = CCM_WD_GeoIP::get_all_countries();
+        $blocked          = (array) ( $settings['geoip_blocked_countries'] ?? array() );
+        $geoip_enabled    = ! empty( $settings['geoip_enabled'] );
+        $geoip_action     = (string) ( $settings['geoip_action'] ?? 'block' );
+        $geoip_weight     = (int) ( $settings['geoip_weight'] ?? 80 );
+        $geoip_log_only   = ! empty( $settings['geoip_log_only'] );
+        $geoip_account_id = (string) ( $settings['geoip_account_id'] ?? '' );
+        $geoip_license    = (string) ( $settings['geoip_license_key'] ?? '' );
+        ?>
+        <div class="ccm-wd-card">
+            <h2><?php esc_html_e( 'Country Blocking (GeoIP)', 'ccm-woo-defender' ); ?></h2>
+            <p class="ccm-wd-text-muted"><?php esc_html_e( 'Block or penalise checkout attempts originating from specific countries using MaxMind GeoLite2 IP lookups.', 'ccm-woo-defender' ); ?></p>
+
+            <!-- API notice -->
+            <div class="ccm-wd-api-notice">
+                <span class="dashicons dashicons-info-outline"></span>
+                <div>
+                    <strong><?php esc_html_e( 'MaxMind API Setup', 'ccm-woo-defender' ); ?></strong><br>
+                    <?php
+                    printf(
+                        /* translators: %1$s = link to MaxMind signup, %2$s = link to license key page */
+                        esc_html__( '1. Create a free account at %1$s. 2. Generate a license key at %2$s (Services > Manage License Keys). 3. Enter your Account ID and License Key below.', 'ccm-woo-defender' ),
+                        '<a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener">maxmind.com</a>',
+                        '<a href="https://www.maxmind.com/en/accounts/current/license-key" target="_blank" rel="noopener">License Keys</a>'
+                    );
+                    ?>
+                    <br>
+                    <small><?php esc_html_e( 'The free GeoLite2 web service allows up to 1,000 lookups per day. Results are cached for 24 hours per IP to minimise usage. GeoLite2 EULA applies.', 'ccm-woo-defender' ); ?></small>
+                </div>
+            </div>
+
+            <!-- Enable GeoIP -->
+            <div class="ccm-wd-setting-row">
+                <div class="ccm-wd-setting-info">
+                    <strong><?php esc_html_e( 'Enable Country Blocking', 'ccm-woo-defender' ); ?></strong>
+                    <p class="ccm-wd-text-muted"><?php esc_html_e( 'Look up the country of each checkout IP and enforce the rules below.', 'ccm-woo-defender' ); ?></p>
+                </div>
+                <div class="ccm-wd-setting-control">
+                    <label class="ccm-wd-toggle">
+                        <input type="checkbox" name="ccm_wd_settings[geoip_enabled]" value="1" <?php checked( $geoip_enabled ); ?> />
+                        <span class="ccm-wd-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- MaxMind Account ID -->
+            <div class="ccm-wd-setting-row">
+                <div class="ccm-wd-setting-info">
+                    <strong><?php esc_html_e( 'MaxMind Account ID', 'ccm-woo-defender' ); ?></strong>
+                    <p class="ccm-wd-text-muted"><?php esc_html_e( 'Your numeric MaxMind account ID.', 'ccm-woo-defender' ); ?></p>
+                </div>
+                <div class="ccm-wd-setting-control">
+                    <input type="text"
+                           name="ccm_wd_settings[geoip_account_id]"
+                           class="ccm-wd-number-input"
+                           style="width: 140px; text-align: left; font-family: var(--ccm-wd-font-mono);"
+                           value="<?php echo esc_attr( $geoip_account_id ); ?>"
+                           placeholder="123456"
+                           autocomplete="off" />
+                </div>
+            </div>
+
+            <!-- MaxMind License Key -->
+            <div class="ccm-wd-setting-row">
+                <div class="ccm-wd-setting-info">
+                    <strong><?php esc_html_e( 'MaxMind License Key', 'ccm-woo-defender' ); ?></strong>
+                    <p class="ccm-wd-text-muted"><?php esc_html_e( 'Your GeoLite2 license key (keep this secret).', 'ccm-woo-defender' ); ?></p>
+                </div>
+                <div class="ccm-wd-setting-control">
+                    <input type="password"
+                           name="ccm_wd_settings[geoip_license_key]"
+                           class="ccm-wd-number-input ccm-wd-input-password"
+                           style="width: 220px; text-align: left;"
+                           value="<?php echo esc_attr( $geoip_license ); ?>"
+                           placeholder="••••••••••••••••"
+                           autocomplete="new-password" />
+                </div>
+            </div>
+
+            <!-- Action Mode -->
+            <div class="ccm-wd-setting-row">
+                <div class="ccm-wd-setting-info">
+                    <strong><?php esc_html_e( 'Blocking Action', 'ccm-woo-defender' ); ?></strong>
+                    <p class="ccm-wd-text-muted"><?php esc_html_e( '"Hard block" stops checkout immediately. "Add to risk score" adds points that combine with other signals.', 'ccm-woo-defender' ); ?></p>
+                </div>
+                <div class="ccm-wd-setting-control">
+                    <select name="ccm_wd_settings[geoip_action]" class="ccm-wd-select">
+                        <option value="block" <?php selected( $geoip_action, 'block' ); ?>><?php esc_html_e( 'Hard block', 'ccm-woo-defender' ); ?></option>
+                        <option value="score" <?php selected( $geoip_action, 'score' ); ?>><?php esc_html_e( 'Add to risk score', 'ccm-woo-defender' ); ?></option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- GeoIP Weight (only matters in 'score' mode) -->
+            <div class="ccm-wd-setting-row">
+                <div class="ccm-wd-setting-info">
+                    <strong><?php esc_html_e( 'Country Risk Score', 'ccm-woo-defender' ); ?></strong>
+                    <p class="ccm-wd-text-muted"><?php esc_html_e( 'Points added to the risk score when action is "Add to risk score". Higher = more likely to trigger a block.', 'ccm-woo-defender' ); ?></p>
+                </div>
+                <div class="ccm-wd-setting-control">
+                    <input type="number" min="10" max="200" name="ccm_wd_settings[geoip_weight]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $geoip_weight ); ?>" />
+                </div>
+            </div>
+
+            <!-- Log-Only / Dry-Run Mode -->
+            <div class="ccm-wd-setting-row">
+                <div class="ccm-wd-setting-info">
+                    <strong><?php esc_html_e( 'Log Only (Dry Run)', 'ccm-woo-defender' ); ?></strong>
+                    <p class="ccm-wd-text-muted"><?php esc_html_e( 'Log the detected country in events without blocking or scoring. Useful for testing your MaxMind setup.', 'ccm-woo-defender' ); ?></p>
+                </div>
+                <div class="ccm-wd-setting-control">
+                    <label class="ccm-wd-toggle">
+                        <input type="checkbox" name="ccm_wd_settings[geoip_log_only]" value="1" <?php checked( $geoip_log_only ); ?> />
+                        <span class="ccm-wd-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Country Selection -->
+            <h3><?php esc_html_e( 'Blocked Countries', 'ccm-woo-defender' ); ?></h3>
+            <p class="ccm-wd-text-muted"><?php esc_html_e( 'Check countries to block or penalise. Unchecked countries are allowed.', 'ccm-woo-defender' ); ?></p>
+
+            <div class="ccm-wd-country-toolbar">
+                <input type="text"
+                       id="ccm-wd-country-search"
+                       class="ccm-wd-country-search"
+                       placeholder="<?php esc_attr_e( 'Search countries…', 'ccm-woo-defender' ); ?>" />
+                <button type="button" id="ccm-wd-country-select-all" class="ccm-wd-country-btn"><?php esc_html_e( 'Select All', 'ccm-woo-defender' ); ?></button>
+                <button type="button" id="ccm-wd-country-deselect-all" class="ccm-wd-country-btn"><?php esc_html_e( 'Deselect All', 'ccm-woo-defender' ); ?></button>
+                <span id="ccm-wd-country-count" class="ccm-wd-country-count"></span>
+            </div>
+
+            <div id="ccm-wd-country-grid" class="ccm-wd-country-grid">
+                <?php foreach ( $countries as $code => $name ) :
+                    $is_blocked = in_array( $code, $blocked, true );
+                ?>
+                    <label class="ccm-wd-country-item<?php echo $is_blocked ? ' is-checked' : ''; ?>"
+                           data-code="<?php echo esc_attr( $code ); ?>"
+                           data-name="<?php echo esc_attr( $name ); ?>">
+                        <input type="checkbox"
+                               name="ccm_wd_settings[geoip_blocked_countries][]"
+                               value="<?php echo esc_attr( $code ); ?>"
+                               <?php checked( $is_blocked ); ?> />
+                        <span class="ccm-wd-country-code"><?php echo esc_html( $code ); ?></span>
+                        <span class="ccm-wd-country-name"><?php echo esc_html( $name ); ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+        </div>
         <?php
     }
 }

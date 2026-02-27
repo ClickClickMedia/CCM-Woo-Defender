@@ -855,6 +855,170 @@
 }
 
 /* ===================================
+   Country Grid – GeoIP Blocking
+   =================================== */
+.ccm-wd-country-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--ccm-wd-space-sm);
+	margin-bottom: var(--ccm-wd-space-md);
+}
+
+.ccm-wd-country-search {
+	flex: 1 1 220px;
+	min-width: 180px;
+	max-width: 320px;
+	padding: 6px 12px;
+	font-size: var(--ccm-wd-text-sm);
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	background: var(--ccm-wd-surface);
+	color: var(--ccm-wd-text);
+	transition: border-color var(--ccm-wd-transition);
+}
+
+.ccm-wd-country-search:focus {
+	outline: none;
+	border-color: var(--ccm-wd-primary);
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, .15);
+}
+
+.ccm-wd-country-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 14px;
+	font-size: var(--ccm-wd-text-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .03em;
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	background: var(--ccm-wd-surface);
+	color: var(--ccm-wd-text-light);
+	cursor: pointer;
+	transition: all var(--ccm-wd-transition);
+}
+
+.ccm-wd-country-btn:hover {
+	border-color: var(--ccm-wd-primary);
+	color: var(--ccm-wd-primary);
+	background: var(--ccm-wd-primary-light);
+}
+
+.ccm-wd-country-count {
+	margin-left: auto;
+	font-size: var(--ccm-wd-text-xs);
+	color: var(--ccm-wd-text-light);
+	font-weight: 600;
+}
+
+.ccm-wd-country-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 2px;
+	max-height: 420px;
+	overflow-y: auto;
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	background: var(--ccm-wd-bg);
+}
+
+.ccm-wd-country-item {
+	display: flex;
+	align-items: center;
+	gap: var(--ccm-wd-space-xs);
+	padding: 6px 12px;
+	font-size: var(--ccm-wd-text-sm);
+	background: var(--ccm-wd-surface);
+	cursor: pointer;
+	transition: background var(--ccm-wd-transition);
+	user-select: none;
+}
+
+.ccm-wd-country-item:hover {
+	background: var(--ccm-wd-primary-light);
+}
+
+.ccm-wd-country-item.is-checked {
+	background: var(--ccm-wd-error-bg);
+}
+
+.ccm-wd-country-item.is-hidden {
+	display: none;
+}
+
+.ccm-wd-country-item input[type="checkbox"] {
+	margin: 0;
+	flex-shrink: 0;
+	accent-color: var(--ccm-wd-error);
+}
+
+.ccm-wd-country-item .ccm-wd-country-code {
+	font-family: var(--ccm-wd-font-mono);
+	font-size: var(--ccm-wd-text-xs);
+	color: var(--ccm-wd-text-light);
+	min-width: 28px;
+}
+
+.ccm-wd-country-item .ccm-wd-country-name {
+	flex: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Custom scrollbar for country grid */
+.ccm-wd-country-grid::-webkit-scrollbar {
+	width: 6px;
+}
+
+.ccm-wd-country-grid::-webkit-scrollbar-track {
+	background: var(--ccm-wd-bg);
+}
+
+.ccm-wd-country-grid::-webkit-scrollbar-thumb {
+	background: var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-full);
+}
+
+.ccm-wd-country-grid::-webkit-scrollbar-thumb:hover {
+	background: var(--ccm-wd-secondary);
+}
+
+/* GeoIP API notice */
+.ccm-wd-api-notice {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--ccm-wd-space-sm);
+	padding: var(--ccm-wd-space-md);
+	background: var(--ccm-wd-warning-bg);
+	border: 1px solid var(--ccm-wd-warning);
+	border-radius: var(--ccm-wd-radius-md);
+	margin-bottom: var(--ccm-wd-space-md);
+	font-size: var(--ccm-wd-text-sm);
+	line-height: 1.6;
+	color: var(--ccm-wd-text);
+}
+
+.ccm-wd-api-notice .dashicons {
+	color: var(--ccm-wd-warning);
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.ccm-wd-api-notice a {
+	color: var(--ccm-wd-primary);
+}
+
+/* Password-style input for license key */
+.ccm-wd-input-password {
+	font-family: var(--ccm-wd-font-mono);
+	letter-spacing: .05em;
+}
+
+/* ===================================
    Responsive
    =================================== */
 @media screen and (max-width: 960px) {
@@ -900,5 +1064,19 @@
 	.ccm-wd-tab {
 		text-align: center;
 		padding: var(--ccm-wd-space-md);
+	}
+
+	.ccm-wd-country-grid {
+		grid-template-columns: 1fr;
+		max-height: 320px;
+	}
+
+	.ccm-wd-country-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.ccm-wd-country-search {
+		max-width: 100%;
 	}
 }

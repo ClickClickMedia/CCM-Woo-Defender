@@ -171,5 +171,82 @@
                 closeModal();
             }
         } );
+
+        /* -------------------------------------------------------
+           Country Grid – Select All / Deselect All / Search / Count
+           ------------------------------------------------------- */
+        var countryGrid   = document.getElementById( 'ccm-wd-country-grid' );
+        var countrySearch = document.getElementById( 'ccm-wd-country-search' );
+        var countryCount  = document.getElementById( 'ccm-wd-country-count' );
+        var btnSelectAll  = document.getElementById( 'ccm-wd-country-select-all' );
+        var btnDeselectAll = document.getElementById( 'ccm-wd-country-deselect-all' );
+
+        function updateCountryCount() {
+            if ( ! countryGrid || ! countryCount ) {
+                return;
+            }
+            var checked = countryGrid.querySelectorAll( 'input[type="checkbox"]:checked' );
+            countryCount.textContent = checked.length + ' selected';
+        }
+
+        function setAllCountries( checked ) {
+            if ( ! countryGrid ) {
+                return;
+            }
+            // Only affect visible (non-hidden) items.
+            var items = countryGrid.querySelectorAll( '.ccm-wd-country-item:not(.is-hidden) input[type="checkbox"]' );
+            for ( var i = 0; i < items.length; i++ ) {
+                items[ i ].checked = checked;
+                items[ i ].closest( '.ccm-wd-country-item' ).classList.toggle( 'is-checked', checked );
+            }
+            updateCountryCount();
+        }
+
+        if ( btnSelectAll ) {
+            btnSelectAll.addEventListener( 'click', function () { setAllCountries( true ); } );
+        }
+        if ( btnDeselectAll ) {
+            btnDeselectAll.addEventListener( 'click', function () { setAllCountries( false ); } );
+        }
+
+        if ( countrySearch && countryGrid ) {
+            countrySearch.addEventListener( 'input', function () {
+                var query = countrySearch.value.toLowerCase().trim();
+                var items = countryGrid.querySelectorAll( '.ccm-wd-country-item' );
+
+                for ( var i = 0; i < items.length; i++ ) {
+                    var name = ( items[ i ].getAttribute( 'data-name' ) || '' ).toLowerCase();
+                    var code = ( items[ i ].getAttribute( 'data-code' ) || '' ).toLowerCase();
+                    var match = ! query || name.indexOf( query ) !== -1 || code.indexOf( query ) !== -1;
+                    items[ i ].classList.toggle( 'is-hidden', ! match );
+                }
+            } );
+        }
+
+        // Toggle is-checked class on country item click.
+        if ( countryGrid ) {
+            countryGrid.addEventListener( 'change', function ( e ) {
+                if ( e.target.type === 'checkbox' ) {
+                    e.target.closest( '.ccm-wd-country-item' ).classList.toggle( 'is-checked', e.target.checked );
+                    updateCountryCount();
+                }
+            } );
+
+            // Click on label area should toggle checkbox.
+            countryGrid.addEventListener( 'click', function ( e ) {
+                var item = e.target.closest( '.ccm-wd-country-item' );
+                if ( item && e.target.type !== 'checkbox' ) {
+                    var cb = item.querySelector( 'input[type="checkbox"]' );
+                    if ( cb ) {
+                        cb.checked = ! cb.checked;
+                        item.classList.toggle( 'is-checked', cb.checked );
+                        updateCountryCount();
+                    }
+                }
+            } );
+
+            // Initial count.
+            updateCountryCount();
+        }
     } );
 } )();

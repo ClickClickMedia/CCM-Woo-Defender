@@ -8,6 +8,7 @@ require_once CCM_WD_PATH . 'includes/class-ccm-wd-store.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-analyzer.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-checkout-guard.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-admin.php';
+require_once CCM_WD_PATH . 'includes/class-ccm-wd-geoip.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-cli-test.php';
 
 class CCM_WD_Plugin {

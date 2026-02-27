@@ -7,6 +7,7 @@ class CCM_WD_Checkout_Guard {
     private CCM_WD_Settings $settings;
     private CCM_WD_Analyzer $analyzer;
     private bool $request_already_blocked = false;
+    private ?CCM_WD_GeoIP $geoip = null;
 
     public function __construct( CCM_WD_Store $store, CCM_WD_Settings $settings, CCM_WD_Analyzer $analyzer ) {
         $this->store    = $store;
@@ -171,8 +172,55 @@ class CCM_WD_Checkout_Guard {
             return;
         }
 
+        // --- GeoIP country check (classic checkout) ---
+        $client_ip  = CCM_WD_Utils::get_client_ip();
+        $geo_result = $this->check_geoip_country( $client_ip );
+
+        if ( $geo_result['blocked'] && 'block' === $geo_result['action'] ) {
+            $errors->add(
+                'ccm_wd_country_blocked',
+                apply_filters(
+                    'ccm_wd_block_message',
+                    __( 'Your transaction could not be processed. Please contact support if this is an error.', 'ccm-woo-defender' )
+                )
+            );
+
+            $context = $this->build_context( $data );
+            $this->store->add_event(
+                array_merge(
+                    $context,
+                    array(
+                        'ts'      => CCM_WD_Utils::now(),
+                        'blocked' => true,
+                        'score'   => 999,
+                        'reasons' => 'geoip_country_block:' . $geo_result['country'],
+                    )
+                )
+            );
+
+            $this->store->set_last_request_context(
+                array(
+                    'hook'    => 'woocommerce_after_checkout_validation',
+                    'blocked' => true,
+                    'reason'  => 'geoip_country_block',
+                    'country' => $geo_result['country'],
+                )
+            );
+
+            return;
+        }
+
         $context    = $this->build_context( $data );
         $evaluation = $this->analyzer->evaluate( $context );
+
+        // Add GeoIP risk score if country is flagged but action is 'score' (not hard block).
+        if ( $geo_result['blocked'] && 'score' === $geo_result['action'] ) {
+            $geo_weight = (int) ( $settings['geoip_weight'] ?? 80 );
+            $evaluation['score']    = (int) $evaluation['score'] + $geo_weight;
+            $evaluation['reasons']  = array_merge( (array) $evaluation['reasons'], array( 'geoip_country_score:' . $geo_result['country'] ) );
+            $evaluation['blocked']  = $evaluation['score'] >= (int) $evaluation['threshold'];
+        }
+
         $is_blocked = ! empty( $evaluation['blocked'] );
 
         if ( $is_blocked ) {
@@ -283,9 +331,47 @@ class CCM_WD_Checkout_Guard {
             $this->throw_store_api_error( 'ccm_wd_force_blocked', $block_message );
         }
 
+        // --- GeoIP country check ---
+        $geo_result = $this->check_geoip_country( $client_ip );
+
+        if ( $geo_result['blocked'] && 'block' === $geo_result['action'] ) {
+            $this->store->set_last_request_context(
+                array(
+                    'hook'    => 'store_api_checkout',
+                    'blocked' => true,
+                    'reason'  => 'geoip_country_block',
+                    'country' => $geo_result['country'],
+                )
+            );
+
+            $context = $this->build_context_from_order( $order );
+            $this->store->add_event(
+                array_merge(
+                    $context,
+                    array(
+                        'ts'      => CCM_WD_Utils::now(),
+                        'blocked' => true,
+                        'score'   => 999,
+                        'reasons' => 'geoip_country_block:' . $geo_result['country'],
+                    )
+                )
+            );
+
+            $this->throw_store_api_error( 'ccm_wd_country_blocked', $block_message );
+        }
+
         // --- Risk-score evaluation ---
         $context    = $this->build_context_from_order( $order );
         $evaluation = $this->analyzer->evaluate( $context );
+
+        // Add GeoIP risk score if country is flagged but action is 'score' (not hard block).
+        if ( $geo_result['blocked'] && 'score' === $geo_result['action'] ) {
+            $geo_weight = (int) ( $settings['geoip_weight'] ?? 80 );
+            $evaluation['score']    = (int) $evaluation['score'] + $geo_weight;
+            $evaluation['reasons']  = array_merge( (array) $evaluation['reasons'], array( 'geoip_country_score:' . $geo_result['country'] ) );
+            $evaluation['blocked']  = $evaluation['score'] >= (int) $evaluation['threshold'];
+        }
+
         $is_blocked = ! empty( $evaluation['blocked'] );
 
         if ( $is_blocked ) {
@@ -317,6 +403,64 @@ class CCM_WD_Checkout_Guard {
         if ( $is_blocked ) {
             $this->throw_store_api_error( 'ccm_wd_blocked', $block_message );
         }
+    }
+
+    /**
+     * Get / lazily create the GeoIP instance.
+     */
+    private function get_geoip(): ?CCM_WD_GeoIP {
+        if ( null !== $this->geoip ) {
+            return $this->geoip->has_credentials() ? $this->geoip : null;
+        }
+
+        $s = $this->settings->get();
+
+        if ( empty( $s['geoip_enabled'] ) ) {
+            return null;
+        }
+
+        $account_id  = (string) ( $s['geoip_account_id'] ?? '' );
+        $license_key = (string) ( $s['geoip_license_key'] ?? '' );
+
+        $this->geoip = new CCM_WD_GeoIP( $account_id, $license_key );
+
+        return $this->geoip->has_credentials() ? $this->geoip : null;
+    }
+
+    /**
+     * Check GeoIP country and return the resolved country code.
+     * Returns an array with 'country' and 'blocked' keys.
+     *
+     * @return array{country: string, blocked: bool, action: string}
+     */
+    private function check_geoip_country( string $client_ip ): array {
+        $result = array( 'country' => '', 'blocked' => false, 'action' => '' );
+
+        $geoip = $this->get_geoip();
+
+        if ( null === $geoip ) {
+            return $result;
+        }
+
+        $country = $geoip->get_country( $client_ip );
+        $result['country'] = $country;
+
+        if ( '' === $country ) {
+            return $result;
+        }
+
+        $settings = $this->settings->get();
+
+        if ( ! empty( $settings['geoip_log_only'] ) ) {
+            return $result;
+        }
+
+        if ( $this->settings->is_country_blocked( $country ) ) {
+            $result['blocked'] = true;
+            $result['action']  = (string) ( $settings['geoip_action'] ?? 'block' );
+        }
+
+        return $result;
     }
 
     /**

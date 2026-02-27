@@ -94,6 +94,14 @@ class CCM_WD_Settings {
             'device_identity_min_attempts'             => 7,
             'device_identity_min_unique_emails'        => 4,
             'repeat_after_blocks_min_attempts'         => 2,
+            // GeoIP / Country Blocking.
+            'geoip_enabled'                            => false,
+            'geoip_account_id'                         => '',
+            'geoip_license_key'                        => '',
+            'geoip_action'                             => 'block',   // 'block' = hard block, 'score' = add risk score.
+            'geoip_weight'                             => 80,        // Risk score added when action = 'score'.
+            'geoip_blocked_countries'                  => array(),   // Array of ISO codes to block/penalise.
+            'geoip_log_only'                           => false,     // Log country without blocking (dry-run mode).
         );
     }
 
@@ -129,6 +137,14 @@ class CCM_WD_Settings {
             'device_identity_min_attempts'             => $this->bounded_int( $raw['device_identity_min_attempts'] ?? $defaults['device_identity_min_attempts'], 2, 30 ),
             'device_identity_min_unique_emails'        => $this->bounded_int( $raw['device_identity_min_unique_emails'] ?? $defaults['device_identity_min_unique_emails'], 2, 20 ),
             'repeat_after_blocks_min_attempts'         => $this->bounded_int( $raw['repeat_after_blocks_min_attempts'] ?? $defaults['repeat_after_blocks_min_attempts'], 1, 20 ),
+            // GeoIP / Country Blocking.
+            'geoip_enabled'                            => ! empty( $raw['geoip_enabled'] ),
+            'geoip_account_id'                         => sanitize_text_field( (string) ( $raw['geoip_account_id'] ?? $defaults['geoip_account_id'] ) ),
+            'geoip_license_key'                        => sanitize_text_field( (string) ( $raw['geoip_license_key'] ?? $defaults['geoip_license_key'] ) ),
+            'geoip_action'                             => in_array( ( $raw['geoip_action'] ?? '' ), array( 'block', 'score' ), true ) ? (string) $raw['geoip_action'] : (string) $defaults['geoip_action'],
+            'geoip_weight'                             => $this->bounded_int( $raw['geoip_weight'] ?? $defaults['geoip_weight'], 10, 200 ),
+            'geoip_blocked_countries'                  => $this->sanitize_country_list( $raw['geoip_blocked_countries'] ?? $defaults['geoip_blocked_countries'] ),
+            'geoip_log_only'                           => ! empty( $raw['geoip_log_only'] ),
         );
     }
 
@@ -173,6 +189,48 @@ class CCM_WD_Settings {
         }
 
         return in_array( $ip, $this->get_manual_blocked_ips(), true );
+    }
+
+    /**
+     * Sanitize the country code list — keep only valid 2-letter ISO codes.
+     *
+     * @param mixed $value
+     * @return array<int, string>
+     */
+    private function sanitize_country_list( $value ): array {
+        if ( ! is_array( $value ) ) {
+            return array();
+        }
+
+        $clean = array();
+
+        foreach ( $value as $code ) {
+            $code = strtoupper( sanitize_key( (string) $code ) );
+            if ( preg_match( '/^[A-Z]{2}$/', $code ) ) {
+                $clean[] = $code;
+            }
+        }
+
+        return array_values( array_unique( $clean ) );
+    }
+
+    /**
+     * Check whether a country code is in the blocked list.
+     */
+    public function is_country_blocked( string $country_code ): bool {
+        if ( '' === $country_code ) {
+            return false;
+        }
+
+        $settings = $this->get();
+
+        if ( empty( $settings['geoip_enabled'] ) ) {
+            return false;
+        }
+
+        $blocked = (array) ( $settings['geoip_blocked_countries'] ?? array() );
+
+        return in_array( strtoupper( $country_code ), $blocked, true );
     }
 
     private function sanitize_ip_list_text( string $value ): string {
