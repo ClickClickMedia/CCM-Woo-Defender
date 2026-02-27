@@ -441,6 +441,13 @@ class CCM_WD_Checkout_Guard {
         $ip       = (string) $order->get_customer_ip_address();
         $ua       = (string) $order->get_customer_user_agent();
 
+        // GeoIP lookup on the order's stored IP.
+        $geo_country = '';
+        if ( '' !== $ip ) {
+            $geo_result  = $this->check_geoip_country( $ip );
+            $geo_country = $geo_result['country'];
+        }
+
         $payment_signature = CCM_WD_Utils::normalize_text( $gateway . '|' . $total . '|' . $country );
         $address_signature = CCM_WD_Utils::normalize_text( $address1 . '|' . $city . '|' . $postcode . '|' . $country );
 
@@ -460,7 +467,7 @@ class CCM_WD_Checkout_Guard {
             'blocked'       => false,
             'score'         => 10,
             'reasons'       => 'order_' . $new_status,
-            'geoip_country' => '',
+            'geoip_country' => $geo_country,
         );
 
         $this->store->add_event( $event );

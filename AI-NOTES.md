@@ -25,6 +25,11 @@
 
 ---
 
+## 1.2.9 - 2026-02-27
+
+### Fixed
+- GeoIP lookup now runs on order_cancelled/order_failed events (track_order_outcome) instead of falling back to billing country.
+
 ## 1.2.8 - 2026-02-27
 
 ### Changed
