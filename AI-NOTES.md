@@ -25,6 +25,11 @@
 
 ---
 
+## 1.3.2 - 2026-02-27
+
+### Fixed
+- Removed overflow-x: auto from history table wrapper to eliminate horizontal scrollbar.
+
 ## 1.3.1 - 2026-02-27
 
 ### Changed

@@ -1115,8 +1115,6 @@
    History Tab – Checkout Event Log
    =================================== */
 .ccm-wd-history-table-wrap {
-	overflow-x: auto;
-	-webkit-overflow-scrolling: touch;
 	margin: var(--ccm-wd-space-md) 0;
 	border: 1px solid var(--ccm-wd-border);
 	border-radius: var(--ccm-wd-radius-md);
