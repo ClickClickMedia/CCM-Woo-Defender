@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.14`
+`1.2.1`
 
 ## What it does
 
@@ -76,7 +76,7 @@ This plugin includes a GitHub updater (same proven method used in `ccm-tools`) s
 How it works:
 
 - On update checks, it queries `https://api.github.com/repos/ClickClickMedia/CCM-Woo-Defender/releases/latest`.
-- It compares the latest release tag (e.g. `v1.00.05`) with the installed plugin version.
+- It compares the latest release tag (e.g. `v1.2.0`) with the installed plugin version.
 - If newer, it injects update data into WordPress plugin update transients.
 - The plugin details popup (`View details`) is also populated from the release metadata/changelog.
 
@@ -92,65 +92,6 @@ Optional GitHub token:
 - For higher API limits (or private repo scenarios), define in `wp-config.php`:
 - `define('CCM_WD_GITHUB_TOKEN', 'your_token_here');`
 
-## How to test blocking automatically (WP-CLI)
-
-Woo Defender now includes a simulation command that generates fraud-like attempts and prints scoring/block decisions.
-
-Run from your WordPress root:
-
-- `wp ccm-wd simulate`
-
-Useful variants:
-
-- `wp ccm-wd simulate --attempts=8 --gateway=paypal --total=139.20 --clear-first=1`
-- `wp ccm-wd simulate --attempts=10 --gateway=stripe --ip=169.148.67.2 --country=AU`
-- `wp ccm-wd simulate --profile=strict --attempts=8`
-- `wp ccm-wd simulate --all-profiles=1 --attempts=8 --gateway=paypal --total=139.20`
-
-Profile behavior:
-
-- Default run uses your currently selected preset profile.
-- `--profile=<lenient|balanced|strict>` runs one preset temporarily for test purposes.
-- `--all-profiles=1` runs Lenient, Balanced, and Strict sequentially for side-by-side comparison.
-- During profile-based simulation, Advanced Mode overrides are temporarily bypassed so preset behavior is tested cleanly.
-
-Deprecation notice handling:
-
-- By default, simulation suppresses PHP deprecation notices from external WP-CLI vendor libraries so output stays readable.
-- Suppression is now applied early during command registration so pre-command CLI rendering warnings are also reduced.
-- If you want full raw deprecation output for debugging, add:
-- `--allow-deprecations=1`
-
-What success looks like:
-
-- Output table shows each attempt with `score`, `blocked` (`yes/no`), and `reasons`.
-- In a normal run, early attempts are often `blocked=no` and later attempts switch to `blocked=yes` as patterns accumulate.
-- Final success line prints counts for tracked attempts, blocked attempts, and active block tokens.
-
-Tip:
-
-- Set profile to `Balanced` first, run simulation, then compare with `Strict` and `Lenient` to verify sensitivity.
-
-## Frontend blocked-flow testing (deterministic)
-
-If proxy/CDN IP forwarding makes IP-based tests inconsistent, use force-block mode to guarantee checkout is blocked.
-
-Enable force-block for 30 minutes:
-
-- `wp ccm-wd force-block --minutes=30`
-
-Check status:
-
-- `wp ccm-wd force-block-status`
-
-Now submit checkout on frontend. It should fail with Woo Defender block message every time while active.
-
-Disable when finished:
-
-- `wp ccm-wd clear-force-block`
-
-This is the recommended way to validate customer-facing blocked UX reliably in staging.
-
 ## Manual IP blocklist (admin UI)
 
 You can now manage a visible IP list in WooCommerce > CCM Woo Defender > Settings:
@@ -161,7 +102,7 @@ You can now manage a visible IP list in WooCommerce > CCM Woo Defender > Setting
 
 Enforcement detail:
 
-- Manual/force blocks and risk-score blocking are enforced in **three** checkout hooks:
+- Manual IP blocks and risk-score blocking are enforced in **three** checkout hooks:
   - `woocommerce_checkout_process` (classic, early)
   - `woocommerce_after_checkout_validation` (classic, validation)
   - `woocommerce_store_api_checkout_update_order_from_request` (block/Store API checkout)
@@ -172,19 +113,10 @@ The Overview tab also shows:
 
 - Manual blocked IP count
 - The current configured IP list
-- Last observed checkout request diagnostics (hook, block reason, resolved IP, forwarded headers)
-
-## Runtime IP diagnostics
-
-If an expected IP block does not trigger, check what IP Woo Defender actually sees:
-
-- `wp ccm-wd runtime-ip`
-
-This prints resolved client IP plus forwarding headers (`REMOTE_ADDR`, `HTTP_X_FORWARDED_FOR`, `HTTP_CF_CONNECTING_IP`).
 
 ## Notes
 
 - This iteration adds a guided Easy Setup plus optional Advanced Mode for power users.
 - It supports both HPOS and legacy posts-based order storage through WooCommerce APIs.
 - It supports both classic (shortcode) and block-based (Store API) WooCommerce checkout pages.
-- Ephemeral data (force-block, diagnostics, updater transients) is cleaned up on plugin deactivation.
+- Updater transients are cleaned up on plugin deactivation.

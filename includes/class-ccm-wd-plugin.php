@@ -9,7 +9,6 @@ require_once CCM_WD_PATH . 'includes/class-ccm-wd-analyzer.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-checkout-guard.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-admin.php';
 require_once CCM_WD_PATH . 'includes/class-ccm-wd-geoip.php';
-require_once CCM_WD_PATH . 'includes/class-ccm-wd-cli-test.php';
 
 class CCM_WD_Plugin {
     private static ?CCM_WD_Plugin $instance = null;
@@ -35,12 +34,6 @@ class CCM_WD_Plugin {
 
         // Remove GitHub updater transients.
         $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%ccm_wd_github_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-
-        // Remove force-block (ephemeral).
-        delete_option( 'ccm_wd_force_block_until' );
-
-        // Remove last-request diagnostics (ephemeral).
-        delete_option( 'ccm_wd_last_request' );
     }
 
     private function __construct() {
@@ -67,7 +60,6 @@ class CCM_WD_Plugin {
         $this->admin    = new CCM_WD_Admin( $this->store, $this->settings );
         $this->guard->register_hooks();
         $this->admin->register_hooks();
-        CCM_WD_CLI_Test::register();
     }
 
     private function is_woocommerce_active(): bool {

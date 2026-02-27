@@ -5,8 +5,6 @@ defined( 'ABSPATH' ) || exit;
 class CCM_WD_Store {
     private const OPTION_EVENTS = 'ccm_wd_events';
     private const OPTION_BLOCKS = 'ccm_wd_blocks';
-    private const OPTION_FORCE_BLOCK_UNTIL = 'ccm_wd_force_block_until';
-    private const OPTION_LAST_REQUEST      = 'ccm_wd_last_request';
     private const MAX_EVENTS    = 2500;
     private const RETENTION_SEC = 2592000;
 
@@ -29,6 +27,30 @@ class CCM_WD_Store {
         }
 
         return $filtered;
+    }
+
+    /**
+     * Return all stored events in reverse chronological order (newest first).
+     *
+     * @param int $limit Maximum number of events to return. 0 = all.
+     * @return array<int, array<string, mixed>>
+     */
+    public function get_history_events( int $limit = 0 ): array {
+        $events = $this->get_events();
+        $events = array_reverse( $events );
+
+        if ( $limit > 0 ) {
+            $events = array_slice( $events, 0, $limit );
+        }
+
+        return $events;
+    }
+
+    /**
+     * Return the total number of stored events.
+     */
+    public function get_events_count(): int {
+        return count( $this->get_events() );
     }
 
     /**
@@ -91,71 +113,6 @@ class CCM_WD_Store {
         update_option( self::OPTION_EVENTS, array(), false );
     }
 
-    public function set_force_block( int $duration_seconds ): int {
-        $duration = max( 60, $duration_seconds );
-        $until    = CCM_WD_Utils::now() + $duration;
-        update_option( self::OPTION_FORCE_BLOCK_UNTIL, $until, false );
-        return $until;
-    }
-
-    public function clear_force_block(): void {
-        delete_option( self::OPTION_FORCE_BLOCK_UNTIL );
-    }
-
-    public function is_force_block_active(): bool {
-        $until = (int) get_option( self::OPTION_FORCE_BLOCK_UNTIL, 0 );
-
-        if ( $until <= 0 ) {
-            return false;
-        }
-
-        if ( $until < CCM_WD_Utils::now() ) {
-            delete_option( self::OPTION_FORCE_BLOCK_UNTIL );
-            return false;
-        }
-
-        return true;
-    }
-
-    public function get_force_block_until(): int {
-        $until = (int) get_option( self::OPTION_FORCE_BLOCK_UNTIL, 0 );
-        return $until > 0 ? $until : 0;
-    }
-
-    /**
-     * @param array<string, string|int|bool> $context
-     */
-    public function set_last_request_context( array $context ): void {
-        $payload = array_merge(
-            array(
-                'ts'                  => CCM_WD_Utils::now(),
-                'resolved_client_ip'  => CCM_WD_Utils::get_client_ip(),
-                'remote_addr'         => (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ),
-                'http_x_forwarded_for'=> (string) ( $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '' ),
-                'http_cf_connecting_ip'=> (string) ( $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '' ),
-                'hook'                => '',
-                'blocked'             => false,
-                'reason'              => '',
-            ),
-            $context
-        );
-
-        update_option( self::OPTION_LAST_REQUEST, $payload, false );
-    }
-
-    /**
-     * @return array<string, string|int|bool>
-     */
-    public function get_last_request_context(): array {
-        $context = get_option( self::OPTION_LAST_REQUEST, array() );
-
-        if ( ! is_array( $context ) ) {
-            return array();
-        }
-
-        return $context;
-    }
-
     /**
      * @return array<string, int>
      */
@@ -173,7 +130,6 @@ class CCM_WD_Store {
             'events_total'   => count( $events ),
             'events_blocked' => $blocked_count,
             'active_blocks'  => count( $this->get_blocks() ),
-            'force_block_on' => $this->is_force_block_active() ? 1 : 0,
         );
     }
 

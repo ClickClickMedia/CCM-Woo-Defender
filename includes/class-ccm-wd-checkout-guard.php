@@ -45,46 +45,9 @@ class CCM_WD_Checkout_Guard {
                 'error'
             );
 
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'woocommerce_checkout_process',
-                    'blocked' => true,
-                    'reason'  => 'manual_ip_block',
-                )
-            );
-
             $this->request_already_blocked = true;
             return;
         }
-
-        if ( $this->store->is_force_block_active() ) {
-            wc_add_notice(
-                (string) apply_filters(
-                    'ccm_wd_block_message',
-                    __( 'Your transaction could not be processed. Please contact support if this is an error.', 'ccm-woo-defender' )
-                ),
-                'error'
-            );
-
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'woocommerce_checkout_process',
-                    'blocked' => true,
-                    'reason'  => 'force_block_active',
-                )
-            );
-
-            $this->request_already_blocked = true;
-            return;
-        }
-
-        $this->store->set_last_request_context(
-            array(
-                'hook'    => 'woocommerce_checkout_process',
-                'blocked' => false,
-                'reason'  => 'none',
-            )
-        );
     }
 
     /**
@@ -120,52 +83,12 @@ class CCM_WD_Checkout_Guard {
                 array_merge(
                     $context,
                     array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => true,
-                        'score'   => 999,
-                        'reasons' => 'manual_ip_block',
+                        'ts'            => CCM_WD_Utils::now(),
+                        'blocked'       => true,
+                        'score'         => 999,
+                        'reasons'       => 'manual_ip_block',
+                        'geoip_country' => '',
                     )
-                )
-            );
-
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'woocommerce_after_checkout_validation',
-                    'blocked' => true,
-                    'reason'  => 'manual_ip_block',
-                )
-            );
-
-            return;
-        }
-
-        if ( $this->store->is_force_block_active() ) {
-            $errors->add(
-                'ccm_wd_force_blocked',
-                apply_filters(
-                    'ccm_wd_block_message',
-                    __( 'Your transaction could not be processed. Please contact support if this is an error.', 'ccm-woo-defender' )
-                )
-            );
-
-            $context = $this->build_context( $data );
-            $this->store->add_event(
-                array_merge(
-                    $context,
-                    array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => true,
-                        'score'   => 999,
-                        'reasons' => 'force_block_active',
-                    )
-                )
-            );
-
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'woocommerce_after_checkout_validation',
-                    'blocked' => true,
-                    'reason'  => 'force_block_active',
                 )
             );
 
@@ -190,20 +113,12 @@ class CCM_WD_Checkout_Guard {
                 array_merge(
                     $context,
                     array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => true,
-                        'score'   => 999,
-                        'reasons' => 'geoip_country_block:' . $geo_result['country'],
+                        'ts'            => CCM_WD_Utils::now(),
+                        'blocked'       => true,
+                        'score'         => 999,
+                        'reasons'       => 'geoip_country_block:' . $geo_result['country'],
+                        'geoip_country' => $geo_result['country'],
                     )
-                )
-            );
-
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'woocommerce_after_checkout_validation',
-                    'blocked' => true,
-                    'reason'  => 'geoip_country_block',
-                    'country' => $geo_result['country'],
                 )
             );
 
@@ -240,22 +155,15 @@ class CCM_WD_Checkout_Guard {
         $event = array_merge(
             $context,
             array(
-                'ts'      => CCM_WD_Utils::now(),
-                'blocked' => $is_blocked,
-                'score'   => (int) ( $evaluation['score'] ?? 0 ),
-                'reasons' => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
+                'ts'            => CCM_WD_Utils::now(),
+                'blocked'       => $is_blocked,
+                'score'         => (int) ( $evaluation['score'] ?? 0 ),
+                'reasons'       => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
+                'geoip_country' => $geo_result['country'],
             )
         );
 
         $this->store->add_event( $event );
-
-        $this->store->set_last_request_context(
-            array(
-                'hook'    => 'woocommerce_after_checkout_validation',
-                'blocked' => $is_blocked,
-                'reason'  => $is_blocked ? 'risk_score_block' : 'not_blocked',
-            )
-        );
     }
 
     /**
@@ -281,23 +189,16 @@ class CCM_WD_Checkout_Guard {
 
         // --- Manual IP block ---
         if ( $this->settings->is_ip_manually_blocked( $client_ip ) ) {
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'store_api_checkout',
-                    'blocked' => true,
-                    'reason'  => 'manual_ip_block',
-                )
-            );
-
             $context = $this->build_context_from_order( $order );
             $this->store->add_event(
                 array_merge(
                     $context,
                     array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => true,
-                        'score'   => 999,
-                        'reasons' => 'manual_ip_block',
+                        'ts'            => CCM_WD_Utils::now(),
+                        'blocked'       => true,
+                        'score'         => 999,
+                        'reasons'       => 'manual_ip_block',
+                        'geoip_country' => '',
                     )
                 )
             );
@@ -305,54 +206,20 @@ class CCM_WD_Checkout_Guard {
             $this->throw_store_api_error( 'ccm_wd_manual_ip_blocked', $block_message );
         }
 
-        // --- Force-block mode ---
-        if ( $this->store->is_force_block_active() ) {
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'store_api_checkout',
-                    'blocked' => true,
-                    'reason'  => 'force_block_active',
-                )
-            );
-
-            $context = $this->build_context_from_order( $order );
-            $this->store->add_event(
-                array_merge(
-                    $context,
-                    array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => true,
-                        'score'   => 999,
-                        'reasons' => 'force_block_active',
-                    )
-                )
-            );
-
-            $this->throw_store_api_error( 'ccm_wd_force_blocked', $block_message );
-        }
-
         // --- GeoIP country check ---
         $geo_result = $this->check_geoip_country( $client_ip );
 
         if ( $geo_result['blocked'] && 'block' === $geo_result['action'] ) {
-            $this->store->set_last_request_context(
-                array(
-                    'hook'    => 'store_api_checkout',
-                    'blocked' => true,
-                    'reason'  => 'geoip_country_block',
-                    'country' => $geo_result['country'],
-                )
-            );
-
             $context = $this->build_context_from_order( $order );
             $this->store->add_event(
                 array_merge(
                     $context,
                     array(
-                        'ts'      => CCM_WD_Utils::now(),
-                        'blocked' => true,
-                        'score'   => 999,
-                        'reasons' => 'geoip_country_block:' . $geo_result['country'],
+                        'ts'            => CCM_WD_Utils::now(),
+                        'blocked'       => true,
+                        'score'         => 999,
+                        'reasons'       => 'geoip_country_block:' . $geo_result['country'],
+                        'geoip_country' => $geo_result['country'],
                     )
                 )
             );
@@ -384,19 +251,12 @@ class CCM_WD_Checkout_Guard {
             array_merge(
                 $context,
                 array(
-                    'ts'      => CCM_WD_Utils::now(),
-                    'blocked' => $is_blocked,
-                    'score'   => (int) ( $evaluation['score'] ?? 0 ),
-                    'reasons' => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
+                    'ts'            => CCM_WD_Utils::now(),
+                    'blocked'       => $is_blocked,
+                    'score'         => (int) ( $evaluation['score'] ?? 0 ),
+                    'reasons'       => implode( ',', (array) ( $evaluation['reasons'] ?? array() ) ),
+                    'geoip_country' => $geo_result['country'],
                 )
-            )
-        );
-
-        $this->store->set_last_request_context(
-            array(
-                'hook'    => 'store_api_checkout',
-                'blocked' => $is_blocked,
-                'reason'  => $is_blocked ? 'risk_score_block' : 'not_blocked',
             )
         );
 
@@ -503,6 +363,7 @@ class CCM_WD_Checkout_Guard {
             'gateway'      => $gateway,
             'country'      => $country,
             'total'        => $total,
+            'client_ip'    => $ip,
             'ip_hash'      => CCM_WD_Utils::hash_token( $ip ),
             'email_hash'   => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $email ) ),
             'name_hash'    => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $name ) ),
@@ -552,6 +413,7 @@ class CCM_WD_Checkout_Guard {
             'gateway'      => $gateway,
             'country'      => $country,
             'total'        => $total_key,
+            'client_ip'    => $ip,
             'ip_hash'      => CCM_WD_Utils::hash_token( $ip ),
             'email_hash'   => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $email ) ),
             'name_hash'    => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $name ) ),
@@ -583,20 +445,22 @@ class CCM_WD_Checkout_Guard {
         $address_signature = CCM_WD_Utils::normalize_text( $address1 . '|' . $city . '|' . $postcode . '|' . $country );
 
         $event = array(
-            'ts'           => CCM_WD_Utils::now(),
-            'gateway'      => $gateway,
-            'country'      => $country,
-            'total'        => $total,
-            'ip_hash'      => CCM_WD_Utils::hash_token( $ip ),
-            'email_hash'   => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $email ) ),
-            'name_hash'    => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $name ) ),
-            'address_hash' => CCM_WD_Utils::hash_token( $address_signature ),
-            'ua_hash'      => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $ua ) ),
-            'payment_hash' => CCM_WD_Utils::hash_token( $payment_signature ),
-            'address_fake' => CCM_WD_Utils::contains_fake_address_patterns( $address1, $city, $postcode ),
-            'blocked'      => false,
-            'score'        => 10,
-            'reasons'      => 'order_' . $new_status,
+            'ts'            => CCM_WD_Utils::now(),
+            'gateway'       => $gateway,
+            'country'       => $country,
+            'total'         => $total,
+            'client_ip'     => $ip,
+            'ip_hash'       => CCM_WD_Utils::hash_token( $ip ),
+            'email_hash'    => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $email ) ),
+            'name_hash'     => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $name ) ),
+            'address_hash'  => CCM_WD_Utils::hash_token( $address_signature ),
+            'ua_hash'       => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $ua ) ),
+            'payment_hash'  => CCM_WD_Utils::hash_token( $payment_signature ),
+            'address_fake'  => CCM_WD_Utils::contains_fake_address_patterns( $address1, $city, $postcode ),
+            'blocked'       => false,
+            'score'         => 10,
+            'reasons'       => 'order_' . $new_status,
+            'geoip_country' => '',
         );
 
         $this->store->add_event( $event );

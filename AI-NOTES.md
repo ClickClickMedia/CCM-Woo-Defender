@@ -1,5 +1,97 @@
 # AI Notes
 
+---
+
+## Versioning Policy
+
+**Format:** `Major.Minor.Patch` (e.g. `1.2.0`). Each segment is a plain integer — no leading zeros. Minor and Patch may range from 0 to 99.
+
+### When to increment
+
+| Segment | When | Examples |
+|---------|------|----------|
+| **Major** (x.0.0) | Breaking changes, major architecture rewrites, removal of existing features, or changes that require user action on upgrade. | Complete rewrite of scoring engine; dropping PHP 8.1 support; changing stored data format in a non-backwards-compatible way. |
+| **Minor** (1.x.0) | New user-facing features or capabilities. Resets Patch to 0. | Adding GeoIP country blocking (1.1.0); adding History tab (1.2.0); adding email notification system; adding a new admin tab or WP-CLI command group. |
+| **Patch** (1.2.x) | Bug fixes, performance improvements, UI polish, copy changes, code refactors that don't add or remove capabilities. | Fixing a false-positive scoring bug; CSS tweaks; improving error messages; optimising a database query. |
+
+### Rules
+
+1. **One bump per release.** If a release contains both a new feature and bug fixes, bump Minor (the higher-impact change wins).
+2. **Assess before committing.** Before finalising a release, determine the increment type and set the version in both the plugin header (`Version:`) and the `CCM_WD_VERSION` constant.
+3. **Tag format.** GitHub release tags use `v` prefix: `v1.2.0`.
+4. **AI-NOTES entries.** New changelog entries in this file use the bare version without `v`: `## 1.2.0 - YYYY-MM-DD`.
+5. **No retroactive renumbering.** Historical entries (1.00.01 – 1.00.19) keep their original numbers.
+6. **README.md** version badge should match the current release.
+
+---
+
+## 1.2.1 - 2026-02-27
+
+### Objective
+
+Remove all test/debug code and diagnostic overhead to make the plugin lightweight for production.
+
+### Removed
+
+- Deleted `tests/test-checkout-spam.php` (standalone CLI spam test script).
+- Deleted `includes/class-ccm-wd-cli-test.php` (WP-CLI commands: `simulate`, `force-block`, `clear-force-block`, `force-block-status`, `runtime-ip`).
+- Removed force-block feature entirely (Store methods, checkout guard checks, admin stat box, deactivation cleanup). This was a test-only facility with no production UI to activate it.
+- Removed `set_last_request_context()` / `get_last_request_context()` diagnostic tracking — eliminated an `update_option()` call on every checkout attempt. The History tab now provides superior visibility into checkout activity.
+- Removed "Last Checkout Request" card from admin Overview (superseded by History tab).
+- Removed "Force Block" stat box from admin Overview.
+- Cleaned up README: removed WP-CLI test sections, force-block documentation, runtime-ip section.
+
+### Why this approach
+
+- Test/simulation code has no place in a production release — it adds attack surface and code weight.
+- The `set_last_request_context()` call wrote to `wp_options` on every single checkout attempt purely for a diagnostic panel that is now redundant with the History tab.
+- Force-block was only triggerable via the now-removed CLI commands and had no admin UI, making it dead code.
+
+---
+
+## 1.2.0 - 2026-02-27
+
+### Objective
+
+Add a History admin tab showing a paginated log of checkout events with IP address and country information. Fix versioning to standard semantic format.
+
+### Implemented
+
+- Added **History tab** to the admin UI (between Overview and Settings).
+  - Paginated table (30 per page) with columns: Date/Time, IP Address, Country, Gateway, Total, Score, Status, Reasons.
+  - Country column shows GeoIP-resolved country (with fallback to billing country); warns when GeoIP and billing country differ.
+  - Score is colour-coded: green (<40), amber (40–69), red (≥70).
+  - Blocked rows have a subtle red background tint.
+  - Responsive horizontal scroll on smaller screens.
+- Added `client_ip` (plaintext) to event context in both `build_context()` and `build_context_from_order()`, and to `track_order_outcome()`.
+- Added `geoip_country` field to all 9 `add_event()` call sites in the checkout guard.
+- Added `get_history_events()` and `get_events_count()` methods to `CCM_WD_Store`.
+- Added `render_history()` and `render_pagination()` methods to `CCM_WD_Admin`.
+- Added History-specific CSS: table with dark header, IP code badges, country badges with tooltips, colour-coded score pills, reason tags, pagination controls, responsive breakpoints.
+- **Versioning overhaul:** switched from zero-padded `1.00.xx` to standard `Major.Minor.Patch` format. Normalised `get_github_version()` in the updater to strip leading zeros from GitHub tags so `version_compare()` works reliably across old and new tag formats.
+- Added versioning policy to AI-NOTES.md.
+
+### Why this approach
+
+- A dedicated History tab gives store admins immediate visibility into checkout activity patterns without WP-CLI.
+- Storing `client_ip` alongside hashed tokens enables actionable diagnostics while privacy-safe hashes remain the basis for scoring.
+- GeoIP country on each event lets admins spot geographic attack patterns at a glance.
+- Standard semver prevents `version_compare()` edge cases and communicates change magnitude to users.
+
+---
+
+## 1.1.0 - 2026-02-27
+
+### Objective
+
+Add GeoIP-based country blocking/scoring using the MaxMind GeoLite2 web service.
+
+### Note
+
+This release was originally shipped across versions 1.00.17 – 1.00.19 under the old numbering scheme. Retroactively classified as a Minor release (new feature).
+
+---
+
 ## 1.00.16 - 2026-02-27
 
 ### Objective

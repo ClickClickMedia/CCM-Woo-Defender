@@ -317,11 +317,17 @@ class CCM_WD_Updater {
 
         $version = ltrim( (string) $this->github_response->tag_name, 'v' );
 
-        if ( false === strpos( $version, '.' ) ) {
-            $version .= '.0';
+        // Normalise to x.x.x — strip leading zeros from each segment so
+        // version_compare() works reliably (e.g. '1.00.19' → '1.0.19').
+        $parts = explode( '.', $version );
+        $parts = array_map( 'intval', $parts );
+
+        // Ensure at least major.minor.patch.
+        while ( count( $parts ) < 3 ) {
+            $parts[] = 0;
         }
 
-        return $version;
+        return implode( '.', array_slice( $parts, 0, 3 ) );
     }
 
     private function get_download_url(): string {

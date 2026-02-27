@@ -144,7 +144,7 @@ class CCM_WD_Admin {
         $settings     = $this->settings->get();
         $selected_tab = isset( $_GET['tab'] ) ? sanitize_key( (string) $_GET['tab'] ) : 'overview';
 
-        if ( ! in_array( $selected_tab, array( 'overview', 'settings' ), true ) ) {
+        if ( ! in_array( $selected_tab, array( 'overview', 'history', 'settings' ), true ) ) {
             $selected_tab = 'overview';
         }
         ?>
@@ -157,6 +157,7 @@ class CCM_WD_Admin {
                 </div>
                 <div class="ccm-wd-tabs">
                     <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview' ) ); ?>" class="ccm-wd-tab <?php echo 'overview' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Overview', 'ccm-woo-defender' ); ?></a>
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=history' ) ); ?>" class="ccm-wd-tab <?php echo 'history' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'History', 'ccm-woo-defender' ); ?></a>
                     <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=settings' ) ); ?>" class="ccm-wd-tab <?php echo 'settings' === $selected_tab ? 'active' : ''; ?>"><?php esc_html_e( 'Settings', 'ccm-woo-defender' ); ?></a>
                 </div>
             </div>
@@ -175,6 +176,8 @@ class CCM_WD_Admin {
 
                 <?php if ( 'overview' === $selected_tab ) : ?>
                     <?php $this->render_overview( $stats, $settings ); ?>
+                <?php elseif ( 'history' === $selected_tab ) : ?>
+                    <?php $this->render_history(); ?>
                 <?php else : ?>
                     <?php $this->render_settings( $settings ); ?>
                 <?php endif; ?>
@@ -191,7 +194,6 @@ class CCM_WD_Admin {
      */
     private function render_overview( array $stats, array $settings ): void {
         $manual_ips = $this->settings->get_manual_blocked_ips();
-        $last       = $this->store->get_last_request_context();
         ?>
 
         <!-- Stats Grid -->
@@ -207,16 +209,6 @@ class CCM_WD_Admin {
             <div class="ccm-wd-stat-box">
                 <span class="ccm-wd-stat-value"><?php echo esc_html( (string) $stats['active_blocks'] ); ?></span>
                 <span class="ccm-wd-stat-label"><?php esc_html_e( 'Active Blocks', 'ccm-woo-defender' ); ?></span>
-            </div>
-            <div class="ccm-wd-stat-box">
-                <span class="ccm-wd-stat-value">
-                    <?php if ( ! empty( $stats['force_block_on'] ) ) : ?>
-                        <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Active', 'ccm-woo-defender' ); ?></span>
-                    <?php else : ?>
-                        <span class="ccm-wd-badge ccm-wd-badge-neutral"><?php esc_html_e( 'Off', 'ccm-woo-defender' ); ?></span>
-                    <?php endif; ?>
-                </span>
-                <span class="ccm-wd-stat-label"><?php esc_html_e( 'Force Block', 'ccm-woo-defender' ); ?></span>
             </div>
         </div>
 
@@ -268,53 +260,6 @@ class CCM_WD_Admin {
             </table>
         </div>
 
-        <!-- Last Checkout Request -->
-        <div class="ccm-wd-card">
-            <h2><?php esc_html_e( 'Last Checkout Request', 'ccm-woo-defender' ); ?></h2>
-            <?php if ( empty( $last ) ) : ?>
-                <p class="ccm-wd-text-muted"><?php esc_html_e( 'No checkout request captured yet.', 'ccm-woo-defender' ); ?></p>
-            <?php else : ?>
-                <table class="ccm-wd-table">
-                    <tbody>
-                    <tr>
-                        <th><?php esc_html_e( 'Hook', 'ccm-woo-defender' ); ?></th>
-                        <td><?php echo esc_html( (string) ( $last['hook'] ?? '' ) ); ?></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></th>
-                        <td>
-                            <?php if ( ! empty( $last['blocked'] ) ) : ?>
-                                <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Yes', 'ccm-woo-defender' ); ?></span>
-                            <?php else : ?>
-                                <span class="ccm-wd-badge ccm-wd-badge-success"><?php esc_html_e( 'No', 'ccm-woo-defender' ); ?></span>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Reason', 'ccm-woo-defender' ); ?></th>
-                        <td><?php echo esc_html( (string) ( $last['reason'] ?? '' ) ); ?></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'Resolved Client IP', 'ccm-woo-defender' ); ?></th>
-                        <td><code><?php echo esc_html( (string) ( $last['resolved_client_ip'] ?? '' ) ); ?></code></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'REMOTE_ADDR', 'ccm-woo-defender' ); ?></th>
-                        <td><code><?php echo esc_html( (string) ( $last['remote_addr'] ?? '' ) ); ?></code></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'X-Forwarded-For', 'ccm-woo-defender' ); ?></th>
-                        <td><code><?php echo esc_html( (string) ( $last['http_x_forwarded_for'] ?? '' ) ); ?></code></td>
-                    </tr>
-                    <tr>
-                        <th><?php esc_html_e( 'CF-Connecting-IP', 'ccm-woo-defender' ); ?></th>
-                        <td><code><?php echo esc_html( (string) ( $last['http_cf_connecting_ip'] ?? '' ) ); ?></code></td>
-                    </tr>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-
         <!-- How Woo Defender Works -->
         <div class="ccm-wd-card">
             <h2><?php esc_html_e( 'How Woo Defender Works', 'ccm-woo-defender' ); ?></h2>
@@ -344,6 +289,206 @@ class CCM_WD_Admin {
                     <?php esc_html_e( 'Clear Woo Defender Data', 'ccm-woo-defender' ); ?>
                 </button>
             </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render the History tab showing a paginated log of checkout events.
+     */
+    private function render_history(): void {
+        $per_page    = 30;
+        $total       = $this->store->get_events_count();
+        $total_pages = max( 1, (int) ceil( $total / $per_page ) );
+        $current     = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
+
+        if ( $current > $total_pages ) {
+            $current = $total_pages;
+        }
+
+        // Get all events (newest first), then slice for current page.
+        $all_events = $this->store->get_history_events();
+        $offset     = ( $current - 1 ) * $per_page;
+        $events     = array_slice( $all_events, $offset, $per_page );
+
+        $countries = CCM_WD_GeoIP::get_all_countries();
+        ?>
+
+        <!-- History Header -->
+        <div class="ccm-wd-card">
+            <h2><?php esc_html_e( 'Checkout History', 'ccm-woo-defender' ); ?></h2>
+            <p class="ccm-wd-text-muted">
+                <?php
+                printf(
+                    /* translators: %d = total event count */
+                    esc_html__( 'Showing %1$d of %2$d recorded checkout events (newest first). Events are automatically pruned after 30 days or when exceeding 2,500 entries.', 'ccm-woo-defender' ),
+                    count( $events ),
+                    $total
+                );
+                ?>
+            </p>
+
+            <?php if ( empty( $events ) ) : ?>
+                <div class="ccm-wd-alert ccm-wd-alert-info">
+                    <p><?php esc_html_e( 'No checkout events recorded yet. Events will appear here as customers attempt checkout.', 'ccm-woo-defender' ); ?></p>
+                </div>
+            <?php else : ?>
+
+                <!-- Pagination (top) -->
+                <?php if ( $total_pages > 1 ) : ?>
+                    <?php $this->render_pagination( $current, $total_pages ); ?>
+                <?php endif; ?>
+
+                <div class="ccm-wd-history-table-wrap">
+                    <table class="ccm-wd-table ccm-wd-history-table">
+                        <thead>
+                            <tr>
+                                <th><?php esc_html_e( 'Date / Time', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'IP Address', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Country', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Gateway', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Total', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Score', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Status', 'ccm-woo-defender' ); ?></th>
+                                <th><?php esc_html_e( 'Reasons', 'ccm-woo-defender' ); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ( $events as $event ) : ?>
+                                <?php
+                                $ts            = (int) ( $event['ts'] ?? 0 );
+                                $client_ip     = (string) ( $event['client_ip'] ?? '' );
+                                $geoip_country = (string) ( $event['geoip_country'] ?? '' );
+                                $billing_country = (string) ( $event['country'] ?? '' );
+                                $gateway       = (string) ( $event['gateway'] ?? '' );
+                                $total_val     = (string) ( $event['total'] ?? '' );
+                                $score         = (int) ( $event['score'] ?? 0 );
+                                $blocked       = ! empty( $event['blocked'] );
+                                $reasons       = (string) ( $event['reasons'] ?? '' );
+
+                                // Resolve country display: show GeoIP country if available, fall back to billing country.
+                                $display_country_code = '' !== $geoip_country ? $geoip_country : $billing_country;
+                                $display_country_name = '';
+                                if ( '' !== $display_country_code ) {
+                                    $display_country_name = $countries[ $display_country_code ] ?? $display_country_code;
+                                }
+
+                                // Format the country label with source indicator.
+                                $country_label = '';
+                                if ( '' !== $geoip_country && isset( $countries[ $geoip_country ] ) ) {
+                                    $country_label = $geoip_country . ' – ' . $countries[ $geoip_country ];
+                                } elseif ( '' !== $billing_country ) {
+                                    $country_label = $billing_country . ( isset( $countries[ $billing_country ] ) ? ' – ' . $countries[ $billing_country ] : '' );
+                                }
+
+                                // Format reasons into readable tags.
+                                $reason_tags = array_filter( array_map( 'trim', explode( ',', $reasons ) ) );
+                                ?>
+                                <tr class="<?php echo $blocked ? 'ccm-wd-row-blocked' : 'ccm-wd-row-allowed'; ?>">
+                                    <td class="ccm-wd-history-date">
+                                        <?php if ( $ts > 0 ) : ?>
+                                            <span class="ccm-wd-date-primary"><?php echo esc_html( gmdate( 'M j, Y', $ts ) ); ?></span>
+                                            <span class="ccm-wd-date-secondary"><?php echo esc_html( gmdate( 'H:i:s', $ts ) ); ?> UTC</span>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted">&mdash;</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ( '' !== $client_ip ) : ?>
+                                            <code class="ccm-wd-ip-code"><?php echo esc_html( $client_ip ); ?></code>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted"><?php esc_html_e( 'N/A', 'ccm-woo-defender' ); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ( '' !== $country_label ) : ?>
+                                            <span class="ccm-wd-country-badge" title="<?php echo esc_attr( $country_label ); ?>">
+                                                <?php echo esc_html( $display_country_code ); ?>
+                                                <span class="ccm-wd-country-tooltip"><?php echo esc_html( $display_country_name ); ?></span>
+                                            </span>
+                                            <?php if ( '' !== $geoip_country && '' !== $billing_country && $geoip_country !== $billing_country ) : ?>
+                                                <span class="ccm-wd-country-mismatch" title="<?php echo esc_attr( sprintf( __( 'GeoIP: %1$s, Billing: %2$s', 'ccm-woo-defender' ), $geoip_country, $billing_country ) ); ?>">
+                                                    <span class="dashicons dashicons-warning"></span>
+                                                </span>
+                                            <?php endif; ?>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted">&mdash;</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo '' !== $gateway ? esc_html( $gateway ) : '<span class="ccm-wd-text-muted">&mdash;</span>'; ?></td>
+                                    <td>
+                                        <?php if ( '' !== $total_val && '0.00' !== $total_val ) : ?>
+                                            <?php echo esc_html( '$' . $total_val ); ?>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted">&mdash;</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="ccm-wd-score <?php echo $score >= 70 ? 'ccm-wd-score-high' : ( $score >= 40 ? 'ccm-wd-score-medium' : 'ccm-wd-score-low' ); ?>">
+                                            <?php echo esc_html( (string) $score ); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ( $blocked ) : ?>
+                                            <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></span>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-badge ccm-wd-badge-success"><?php esc_html_e( 'Allowed', 'ccm-woo-defender' ); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="ccm-wd-history-reasons">
+                                        <?php if ( ! empty( $reason_tags ) ) : ?>
+                                            <?php foreach ( $reason_tags as $tag ) : ?>
+                                                <span class="ccm-wd-reason-tag"><?php echo esc_html( $tag ); ?></span>
+                                            <?php endforeach; ?>
+                                        <?php else : ?>
+                                            <span class="ccm-wd-text-muted">&mdash;</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination (bottom) -->
+                <?php if ( $total_pages > 1 ) : ?>
+                    <?php $this->render_pagination( $current, $total_pages ); ?>
+                <?php endif; ?>
+
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render pagination controls for the history tab.
+     */
+    private function render_pagination( int $current, int $total_pages ): void {
+        $base_url = admin_url( 'admin.php?page=ccm-woo-defender&tab=history' );
+        ?>
+        <div class="ccm-wd-pagination">
+            <?php if ( $current > 1 ) : ?>
+                <a href="<?php echo esc_url( add_query_arg( 'paged', $current - 1, $base_url ) ); ?>" class="ccm-wd-button ccm-wd-button-small ccm-wd-button-secondary">&laquo; <?php esc_html_e( 'Previous', 'ccm-woo-defender' ); ?></a>
+            <?php else : ?>
+                <span class="ccm-wd-button ccm-wd-button-small ccm-wd-button-secondary" style="opacity: 0.4; pointer-events: none;">&laquo; <?php esc_html_e( 'Previous', 'ccm-woo-defender' ); ?></span>
+            <?php endif; ?>
+
+            <span class="ccm-wd-pagination-info">
+                <?php
+                printf(
+                    /* translators: %1$d = current page, %2$d = total pages */
+                    esc_html__( 'Page %1$d of %2$d', 'ccm-woo-defender' ),
+                    $current,
+                    $total_pages
+                );
+                ?>
+            </span>
+
+            <?php if ( $current < $total_pages ) : ?>
+                <a href="<?php echo esc_url( add_query_arg( 'paged', $current + 1, $base_url ) ); ?>" class="ccm-wd-button ccm-wd-button-small ccm-wd-button-secondary"><?php esc_html_e( 'Next', 'ccm-woo-defender' ); ?> &raquo;</a>
+            <?php else : ?>
+                <span class="ccm-wd-button ccm-wd-button-small ccm-wd-button-secondary" style="opacity: 0.4; pointer-events: none;"><?php esc_html_e( 'Next', 'ccm-woo-defender' ); ?> &raquo;</span>
+            <?php endif; ?>
         </div>
         <?php
     }
