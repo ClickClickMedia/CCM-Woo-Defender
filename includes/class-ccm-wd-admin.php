@@ -420,6 +420,8 @@ class CCM_WD_Admin {
                                         <?php else : ?>
                                             <span class="ccm-wd-text-muted">#<?php echo esc_html( (string) $event_order_id ); ?></span>
                                         <?php endif; ?>
+                                        <?php elseif ( $blocked ) : ?>
+                                            <span class="ccm-wd-badge ccm-wd-badge-error"><?php esc_html_e( 'Blocked', 'ccm-woo-defender' ); ?></span>
                                         <?php else : ?>
                                             <span class="ccm-wd-text-muted">&mdash;</span>
                                         <?php endif; ?>

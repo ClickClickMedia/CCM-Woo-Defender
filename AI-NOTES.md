@@ -25,6 +25,12 @@
 
 ---
 
+## 1.3.1 - 2026-02-27
+
+### Changed
+- History table uses full width (no horizontal scrollbar).
+- Order column shows "Blocked" badge for blocked events with no order.
+
 ## 1.3.0 - 2026-02-27
 
 ### Added
