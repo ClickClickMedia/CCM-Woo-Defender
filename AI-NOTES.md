@@ -25,6 +25,13 @@
 
 ---
 
+## 1.2.5 - 2026-02-27
+
+### Changed
+- Settings page layout: Easy Setup, Advanced Settings, GeoIP, and Blocked IPs are now four separate cards.
+- Blocked IPs moved from inside Easy Setup to its own dedicated card.
+- Advanced Detection Controls appear as a separate card directly below Easy Setup (toggled by Advanced Mode).
+
 ## 1.2.4 - 2026-02-27
 
 ### Objective

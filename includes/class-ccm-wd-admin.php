@@ -577,19 +577,7 @@ class CCM_WD_Admin {
                         </label>
                     </div>
                 </div>
-
-                <!-- Manual Blocked IPs -->
-                <div class="ccm-wd-setting-row" style="flex-direction: column;">
-                    <div class="ccm-wd-setting-info">
-                        <strong><?php esc_html_e( 'Manual Blocked IP List', 'ccm-woo-defender' ); ?></strong>
-                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses are always blocked at checkout before scoring.', 'ccm-woo-defender' ); ?></p>
-                    </div>
-                    <textarea name="ccm_wd_settings[manual_blocked_ips]" rows="5" class="ccm-wd-textarea"><?php echo esc_textarea( (string) ( $settings['manual_blocked_ips'] ?? '' ) ); ?></textarea>
-                </div>
             </div>
-
-            <!-- GeoIP Country Blocking Card -->
-            <?php $this->render_geoip_card( $settings ); ?>
 
             <!-- Advanced Detection Controls Card -->
             <div id="ccm-wd-advanced-card" class="ccm-wd-card" style="<?php echo empty( $settings['advanced_mode'] ) ? 'display:none;' : ''; ?>">
@@ -744,6 +732,22 @@ class CCM_WD_Admin {
                     <div class="ccm-wd-setting-control">
                         <input type="number" min="1" max="20" name="ccm_wd_settings[repeat_after_blocks_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['repeat_after_blocks_min_attempts'] ); ?>" />
                     </div>
+                </div>
+            </div>
+
+            <!-- GeoIP Country Blocking Card -->
+            <?php $this->render_geoip_card( $settings ); ?>
+
+            <!-- Manual Blocked IPs Card -->
+            <div class="ccm-wd-card">
+                <h2><?php esc_html_e( 'Blocked IPs', 'ccm-woo-defender' ); ?></h2>
+                <p class="ccm-wd-text-muted"><?php esc_html_e( 'Manually block specific IP addresses from completing checkout.', 'ccm-woo-defender' ); ?></p>
+                <div class="ccm-wd-setting-row" style="flex-direction: column;">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Manual Blocked IP List', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses are always blocked at checkout before scoring.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <textarea name="ccm_wd_settings[manual_blocked_ips]" rows="5" class="ccm-wd-textarea"><?php echo esc_textarea( (string) ( $settings['manual_blocked_ips'] ?? '' ) ); ?></textarea>
                 </div>
             </div>
 
