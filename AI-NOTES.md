@@ -25,6 +25,13 @@
 
 ---
 
+## 1.2.6 - 2026-02-27
+
+### Added
+- Click Click Media logo in the admin header bar (links to the plugin page).
+- Plugin icon (SVG/PNG) shown on the Plugins page, update screens, and plugin info popups.
+- New `assets/` directory containing `logo.svg`, `icon.svg`, and `icon.png`.
+
 ## 1.2.5 - 2026-02-27
 
 ### Changed

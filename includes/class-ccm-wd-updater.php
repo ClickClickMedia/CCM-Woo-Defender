@@ -29,6 +29,9 @@ class CCM_WD_Updater {
         add_filter( 'upgrader_post_install', array( $this, 'after_install' ), 10, 3 );
         add_filter( 'http_request_args', array( $this, 'add_auth_to_request' ), 10, 2 );
 
+        // Plugin icon hooks.
+        add_filter( 'site_transient_update_plugins', array( $this, 'inject_plugin_icons' ), 99 );
+
         add_action( 'load-plugins.php', array( $this, 'force_update_check_on_plugins_page' ) );
         add_action( 'load-update-core.php', array( $this, 'force_update_check_on_plugins_page' ) );
     }
@@ -117,6 +120,7 @@ class CCM_WD_Updater {
         $obj->url         = $this->github_response->html_url ?? '';
         $obj->package     = $this->get_download_url();
         $obj->tested      = $this->get_current_wp_version();
+        $obj->icons       = $this->get_plugin_icons();
 
         if ( version_compare( $github_version, $current_version, '>' ) ) {
             if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
@@ -161,6 +165,7 @@ class CCM_WD_Updater {
         $obj->url         = $this->github_response->html_url ?? '';
         $obj->package     = $this->get_download_url();
         $obj->tested      = $this->get_current_wp_version();
+        $obj->icons       = $this->get_plugin_icons();
 
         if ( ! is_object( $transient ) ) {
             $transient = new stdClass();
@@ -203,6 +208,7 @@ class CCM_WD_Updater {
             'changelog'   => $this->get_changelog(),
         );
         $plugin_info->download_link = $this->get_download_url();
+        $plugin_info->icons         = $this->get_plugin_icons();
 
         return $plugin_info;
     }
@@ -395,5 +401,46 @@ class CCM_WD_Updater {
         $data = json_decode( (string) wp_remote_retrieve_body( $response ) );
 
         return empty( $data ) ? false : $data;
+    }
+
+    /**
+     * Get the plugin icon URLs used on the Plugins page and update screens.
+     *
+     * @return array<string, string>
+     */
+    private function get_plugin_icons(): array {
+        $plugin_url = plugin_dir_url( $this->file );
+
+        return array(
+            'svg'     => $plugin_url . 'assets/icon.svg',
+            '1x'     => $plugin_url . 'assets/icon.png',
+            '2x'     => $plugin_url . 'assets/icon.png',
+            'default' => $plugin_url . 'assets/icon.svg',
+        );
+    }
+
+    /**
+     * Ensure icons are present on the update_plugins transient so WordPress
+     * can display them on the Plugins page and the Updates screen.
+     *
+     * @param mixed $transient
+     * @return mixed
+     */
+    public function inject_plugin_icons( $transient ) {
+        if ( ! $transient || ! is_object( $transient ) ) {
+            return $transient;
+        }
+
+        $icons = $this->get_plugin_icons();
+
+        if ( isset( $transient->response[ $this->plugin ] ) ) {
+            $transient->response[ $this->plugin ]->icons = $icons;
+        }
+
+        if ( isset( $transient->no_update[ $this->plugin ] ) ) {
+            $transient->no_update[ $this->plugin ]->icons = $icons;
+        }
+
+        return $transient;
     }
 }

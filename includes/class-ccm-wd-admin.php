@@ -152,7 +152,10 @@ class CCM_WD_Admin {
 
             <div class="ccm-wd-header">
                 <div class="ccm-wd-header-brand">
-                    <h1><?php esc_html_e( 'CCM Woo Defender', 'ccm-woo-defender' ); ?></h1>
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender' ) ); ?>" class="ccm-wd-header-logo">
+                        <img src="<?php echo esc_url( plugin_dir_url( CCM_WD_FILE ) . 'assets/logo.svg' ); ?>" alt="Click Click Media">
+                    </a>
+                    <h1><?php esc_html_e( 'Woo Defender', 'ccm-woo-defender' ); ?></h1>
                     <span class="ccm-wd-version">v<?php echo esc_html( CCM_WD_VERSION ); ?></span>
                 </div>
                 <div class="ccm-wd-tabs">
