@@ -25,6 +25,11 @@
 
 ---
 
+## 1.3.4 - 2026-02-27
+
+### Fixed
+- Classic checkout events now get backfilled with order_id via `woocommerce_checkout_order_processed` hook.
+
 ## 1.3.3 - 2026-02-27
 
 ### Changed

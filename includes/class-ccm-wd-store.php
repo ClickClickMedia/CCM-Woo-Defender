@@ -65,6 +65,31 @@ class CCM_WD_Store {
     }
 
     /**
+     * Backfill `order_id` on the most recent event that has order_id = 0
+     * and matches the given IP address (to avoid mis-attribution).
+     */
+    public function backfill_last_event_order_id( int $order_id, string $client_ip ): void {
+        $events = $this->get_events();
+
+        // Walk backwards to find the most recent matching event.
+        for ( $i = count( $events ) - 1; $i >= 0; $i-- ) {
+            $event = $events[ $i ];
+
+            if ( (int) ( $event['order_id'] ?? -1 ) !== 0 ) {
+                continue;
+            }
+
+            if ( '' !== $client_ip && ( $event['client_ip'] ?? '' ) !== $client_ip ) {
+                continue;
+            }
+
+            $events[ $i ]['order_id'] = $order_id;
+            update_option( self::OPTION_EVENTS, $events, false );
+            return;
+        }
+    }
+
+    /**
      * @return array<string, int>
      */
     public function get_blocks(): array {

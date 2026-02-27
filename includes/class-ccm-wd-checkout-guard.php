@@ -20,6 +20,9 @@ class CCM_WD_Checkout_Guard {
         add_action( 'woocommerce_checkout_process', array( $this, 'checkout_process_guard' ), 5 );
         add_action( 'woocommerce_after_checkout_validation', array( $this, 'validate_checkout' ), 20, 2 );
 
+        // Backfill order_id on the event recorded during validate_checkout (classic flow).
+        add_action( 'woocommerce_checkout_order_processed', array( $this, 'backfill_order_id' ), 5, 1 );
+
         // Block-based (Store API) checkout hook — fires for /wc/store/v1/checkout.
         add_action( 'woocommerce_store_api_checkout_update_order_from_request', array( $this, 'store_api_checkout_guard' ), 5, 2 );
 
@@ -428,6 +431,15 @@ class CCM_WD_Checkout_Guard {
             'payment_hash' => CCM_WD_Utils::hash_token( $payment_signature ),
             'address_fake' => CCM_WD_Utils::contains_fake_address_patterns( $address1, $city, $postcode ),
         );
+    }
+
+    /**
+     * Backfill order_id on the event recorded during validate_checkout().
+     * Fires after WC creates the order in the classic checkout flow.
+     */
+    public function backfill_order_id( int $order_id ): void {
+        $client_ip = CCM_WD_Utils::get_client_ip();
+        $this->store->backfill_last_event_order_id( $order_id, $client_ip );
     }
 
     public function track_order_outcome( int $order_id, string $old_status, string $new_status, WC_Order $order ): void {
