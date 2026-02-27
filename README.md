@@ -4,7 +4,7 @@ Lightweight fraud defense plugin for WooCommerce checkout abuse patterns (card/p
 
 ## Version
 
-`1.00.014`
+`1.00.14`
 
 ## What it does
 
@@ -76,7 +76,7 @@ This plugin includes a GitHub updater (same proven method used in `ccm-tools`) s
 How it works:
 
 - On update checks, it queries `https://api.github.com/repos/ClickClickMedia/CCM-Woo-Defender/releases/latest`.
-- It compares the latest release tag (e.g. `v1.00.005`) with the installed plugin version.
+- It compares the latest release tag (e.g. `v1.00.05`) with the installed plugin version.
 - If newer, it injects update data into WordPress plugin update transients.
 - The plugin details popup (`View details`) is also populated from the release metadata/changelog.
 

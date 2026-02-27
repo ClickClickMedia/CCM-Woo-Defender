@@ -1,6 +1,6 @@
 # AI Notes
 
-## 1.00.016 - 2026-02-27
+## 1.00.16 - 2026-02-27
 
 ### Objective
 
@@ -22,7 +22,7 @@ Clean up the Advanced Detection Controls layout for consistent alignment, and ad
 - Delegated click handling means info buttons work even if the advanced card is toggled in/out dynamically.
 - Dashicons is already shipped with WordPress admin — zero extra weight.
 
-## 1.00.015 - 2026-02-27
+## 1.00.15 - 2026-02-27
 
 ### Objective
 
@@ -46,7 +46,7 @@ Add AJAX-powered Advanced Mode toggle so the Advanced Detection Controls card ap
 - Rendering the card in the DOM (hidden) rather than lazy-loading HTML ensures all form fields are always submitted on Save, preventing data loss if the user toggles advanced on, edits values, then saves.
 - Vanilla JS with no jQuery dependency keeps the script small and fast.
 
-## 1.00.014 - 2026-02-27
+## 1.00.14 - 2026-02-27
 
 ### Objective
 
@@ -82,7 +82,7 @@ Redesign the admin UI to match the CCM-Tools design system for consistent brandi
 - Card-based layout with stats grid follows the same information hierarchy pattern proven in CCM-Tools.
 - The dark sticky header and pill navigation provide persistent context when scrolling long settings pages.
 
-## 1.00.013 - 2026-02-27
+## 1.00.13 - 2026-02-27
 
 ### Objective
 
@@ -114,7 +114,7 @@ Fix the critical issue where checkout blocking never fires on WooCommerce block-
 - Using `RouteException` is the WooCommerce-documented way to surface errors in block checkout.
 - Per-visitor filtering of `blocked_attempts_recent` eliminates score inflation that could block innocent customers.
 
-## 1.00.012 - 2026-02-27
+## 1.00.12 - 2026-02-27
 
 ### Objective
 
@@ -136,7 +136,7 @@ Resolve cases where checkout still completes despite manual block expectations.
 - Some checkout flows/themes can behave differently around validation timing.
 - Dual-hook enforcement + captured request diagnostics gives both stronger blocking reliability and fast root-cause visibility.
 
-## 1.00.011 - 2026-02-27
+## 1.00.11 - 2026-02-27
 
 ### Objective
 
@@ -156,7 +156,7 @@ Provide visible, easy-to-manage IP blocking in admin and ensure those manual blo
 - Gives admins a straightforward “list of blocked IPs” in UI.
 - Eliminates uncertainty when testing IP blocks behind proxies/CDNs.
 
-## 1.00.010 - 2026-02-27
+## 1.00.10 - 2026-02-27
 
 ### Objective
 
@@ -178,7 +178,7 @@ Provide a reliable way to test frontend blocked UX even when real client IP visi
 - Removes uncertainty from IP/header forwarding during UX validation.
 - Lets testers confirm the real customer-facing blocked behavior immediately.
 
-## 1.00.009 - 2026-02-27
+## 1.00.09 - 2026-02-27
 
 ### Objective
 
@@ -196,7 +196,7 @@ Clarify and improve simulation mode coverage so users can test preset strictness
 - Makes it easy to answer “which mode is this testing?”
 - Enables quick confidence testing and false-positive tuning across all presets.
 
-## 1.00.008 - 2026-02-27
+## 1.00.08 - 2026-02-27
 
 ### Objective
 
@@ -213,7 +213,7 @@ Fix remaining deprecation noise shown before simulator output on some WP-CLI env
 - Some notices were emitted before command callback execution.
 - Early suppression catches that phase while preserving opt-in raw debugging mode.
 
-## 1.00.007 - 2026-02-27
+## 1.00.07 - 2026-02-27
 
 ### Objective
 
@@ -230,7 +230,7 @@ Improve simulation usability by reducing noisy deprecation output and clarify te
 - The deprecation notices shown were from WP-CLI bundled vendor libraries, not Defender logic.
 - Cleaner output makes it easier to verify actual fraud scoring and block transitions.
 
-## 1.00.006 - 2026-02-27
+## 1.00.06 - 2026-02-27
 
 ### Objective
 
@@ -249,7 +249,7 @@ Provide an easy automated way to validate fraud scoring and blocking behavior en
 - Gives repeatable, scriptable validation without relying on manual checkout submissions.
 - Lets teams compare profile strictness (`Lenient`, `Balanced`, `Strict`) quickly.
 
-## 1.00.005 - 2026-02-27
+## 1.00.05 - 2026-02-27
 
 ### Objective
 
@@ -276,7 +276,7 @@ Add GitHub release-based plugin update detection in WordPress and support forced
 - Gives reliable update visibility directly in WordPress Plugins screen.
 - Keeps manual override (`force-check=1`) for immediate refresh during release verification.
 
-## 1.00.004 - 2026-02-27
+## 1.00.04 - 2026-02-27
 
 ### Objective
 
@@ -303,7 +303,7 @@ Provide a comprehensive, easy-to-understand explanation of exactly how Defender 
 - Add per-signal live counters in Overview for transparency.
 - Add a simulation tool to preview score outcomes before changing settings.
 
-## 1.00.003 - 2026-02-27
+## 1.00.03 - 2026-02-27
 
 ### Objective
 
@@ -331,7 +331,7 @@ Prioritize ease of use with preset-based setup while still supporting advanced t
 - Add contextual helper tooltips and preset preview summaries.
 - Add test-simulation panel to estimate block score with sample inputs.
 
-## 1.00.002 - 2026-02-27
+## 1.00.02 - 2026-02-27
 
 ### Objective
 
@@ -361,7 +361,7 @@ Continue with an easy-to-use admin UI and appropriate, configurable protection s
 - Add quick presets (`Balanced`, `Strict`, `Lenient`) to simplify first-time setup.
 - Add short explanations beside each signal with examples.
 
-## 1.00.001 - 2026-02-27
+## 1.00.01 - 2026-02-27
 
 ### Objective
 
