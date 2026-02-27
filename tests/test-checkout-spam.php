@@ -79,13 +79,16 @@ function parse_args(): array {
 
 // ─── cURL helper ───────────────────────────────────────────────────────────────
 
-function api_request( string $method, string $url, string $cookie_file, string $nonce = '', ?array $body = null ): array {
+function api_request( string $method, string $url, string $cookie_file, string $nonce = '', ?array $body = null, bool $json = true ): array {
     $ch = curl_init( $url );
 
     $headers = array(
-        'Content-Type: application/json',
         'Accept: application/json',
     );
+
+    if ( $json ) {
+        $headers[] = 'Content-Type: application/json';
+    }
 
     if ( $nonce ) {
         $headers[] = "X-WC-Store-API-Nonce: {$nonce}";
@@ -101,7 +104,7 @@ function api_request( string $method, string $url, string $cookie_file, string $
         CURLOPT_SSL_VERIFYPEER => false,
         CURLOPT_SSL_VERIFYHOST => 0,
         CURLOPT_TIMEOUT        => 30,
-        CURLOPT_USERAGENT      => 'CCM-WD-SpamTester/1.0',
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     ) );
 
     if ( 'POST' === $method ) {
@@ -123,6 +126,7 @@ function api_request( string $method, string $url, string $cookie_file, string $
             'body'  => null,
             'nonce' => $nonce,
             'error' => $curl_error,
+            'raw'   => '',
         );
     }
 
@@ -134,7 +138,6 @@ function api_request( string $method, string $url, string $cookie_file, string $
     if ( preg_match( '/X-WC-Store-API-Nonce:\s*(.+)/i', $resp_headers, $m ) ) {
         $new_nonce = trim( $m[1] );
     }
-    // Also check the Nonce header (some WC versions).
     if ( ! $new_nonce && preg_match( '/^Nonce:\s*(.+)/im', $resp_headers, $m ) ) {
         $new_nonce = trim( $m[1] );
     }
@@ -146,6 +149,75 @@ function api_request( string $method, string $url, string $cookie_file, string $
         'raw'   => $resp_body,
         'error' => '',
     );
+}
+
+/**
+ * Load the checkout page HTML and extract the Store API nonce from
+ * WooCommerce's inline JS globals (wcBlocksMiddlewareConfig, wcSettings, etc.).
+ */
+function get_store_api_nonce( string $site_url, string $cookie_file, bool $verbose = false ): string {
+    $ch = curl_init();
+
+    // Try /checkout first, fall back to /?wc-ajax=get_refreshed_fragments.
+    $checkout_url = "{$site_url}/checkout/";
+
+    curl_setopt_array( $ch, array(
+        CURLOPT_URL            => $checkout_url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_COOKIEFILE     => $cookie_file,
+        CURLOPT_COOKIEJAR      => $cookie_file,
+        CURLOPT_HTTPHEADER     => array( 'Accept: text/html' ),
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    ) );
+
+    $html = curl_exec( $ch );
+    $code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+    curl_close( $ch );
+
+    if ( false === $html || $code >= 400 ) {
+        if ( $verbose ) {
+            echo c_dim( "    [nonce] Checkout page returned HTTP {$code}\n" );
+        }
+        return '';
+    }
+
+    if ( $verbose ) {
+        echo c_dim( "    [nonce] Loaded checkout page (" . strlen( $html ) . " bytes)\n" );
+    }
+
+    // Pattern 1: wcBlocksMiddlewareConfig.nonce (WC 8.x+)
+    if ( preg_match( '/wcBlocksMiddlewareConfig\s*[=:]\s*\{[^}]*"nonce"\s*:\s*"([a-f0-9]+)"/s', $html, $m ) ) {
+        if ( $verbose ) {
+            echo c_dim( "    [nonce] Found via wcBlocksMiddlewareConfig: {$m[1]}\n" );
+        }
+        return $m[1];
+    }
+
+    // Pattern 2: "storeApiNonce":"..."
+    if ( preg_match( '/"storeApiNonce"\s*:\s*"([a-f0-9]+)"/', $html, $m ) ) {
+        if ( $verbose ) {
+            echo c_dim( "    [nonce] Found via storeApiNonce: {$m[1]}\n" );
+        }
+        return $m[1];
+    }
+
+    // Pattern 3: wcSettings.admin? look for nonce anywhere in a WC script block
+    if ( preg_match( '/"nonce"\s*:\s*"([a-f0-9]{10,})"/', $html, $m ) ) {
+        if ( $verbose ) {
+            echo c_dim( "    [nonce] Found via generic nonce match: {$m[1]}\n" );
+        }
+        return $m[1];
+    }
+
+    if ( $verbose ) {
+        echo c_dim( "    [nonce] Could not find Store API nonce in page HTML\n" );
+    }
+
+    return '';
 }
 
 // ─── Test identities (rotating fraud-like data) ───────────────────────────────
@@ -340,20 +412,28 @@ function main(): int {
         // Fresh cookie jar for each "attacker".
         $cookie_file = tempnam( sys_get_temp_dir(), 'ccm_wd_test_' );
 
-        // Step 1: Get cart (establishes WC session + nonce).
-        $cart_resp = api_request( 'GET', $cart_url, $cookie_file );
+        // Step 1: Load the checkout page to establish a WC session and grab the Store API nonce.
+        $nonce = get_store_api_nonce( $site_url, $cookie_file, $verbose );
 
-        if ( 0 === $cart_resp['code'] ) {
-            print_table_row( $i, $identity['email'], format_status( 'error' ), 'Could not reach site: ' . $cart_resp['error'] );
+        if ( '' === $nonce ) {
+            // Fallback: try a GET /cart API call (some WC configurations return it in headers).
+            $cart_resp = api_request( 'GET', $cart_url, $cookie_file );
+            $nonce     = $cart_resp['nonce'];
+
+            if ( $verbose ) {
+                echo c_dim( "    [cart-fallback] HTTP {$cart_resp['code']}, nonce: {$nonce}\n" );
+            }
+        }
+
+        if ( '' === $nonce ) {
+            print_table_row( $i, $identity['email'], format_status( 'error' ), 'Could not obtain Store API nonce' );
             $errors++;
             @unlink( $cookie_file );
             continue;
         }
 
-        $nonce = $cart_resp['nonce'];
-
         if ( $verbose ) {
-            echo c_dim( "    [cart] HTTP {$cart_resp['code']}, nonce: {$nonce}\n" );
+            echo c_dim( "    [nonce] Using: {$nonce}\n" );
         }
 
         // Step 2: Add product to cart.
