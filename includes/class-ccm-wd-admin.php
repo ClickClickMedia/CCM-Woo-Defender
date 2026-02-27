@@ -12,12 +12,26 @@ class CCM_WD_Admin {
     }
 
     public function register_hooks(): void {
-        add_action( 'admin_menu', array( $this, 'register_menu' ) );
+        add_action( 'admin_menu', array( $this, 'register_menu' ), 60 );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_post_ccm_wd_save_settings', array( $this, 'handle_save_settings' ) );
         add_action( 'admin_post_ccm_wd_reset_settings', array( $this, 'handle_reset_settings' ) );
         add_action( 'admin_post_ccm_wd_clear_data', array( $this, 'handle_clear_data' ) );
         add_action( 'wp_ajax_ccm_wd_toggle_advanced', array( $this, 'ajax_toggle_advanced' ) );
+
+        // Add "Settings" link on the Plugins page.
+        $plugin_basename = plugin_basename( CCM_WD_FILE );
+        add_filter( "plugin_action_links_{$plugin_basename}", array( $this, 'plugin_action_links' ) );
+    }
+
+    /**
+     * Add a "Settings" link to the plugin row on the Plugins page.
+     */
+    public function plugin_action_links( array $links ): array {
+        $settings_url  = admin_url( 'admin.php?page=ccm-woo-defender' );
+        $settings_link = '<a href="' . esc_url( $settings_url ) . '">' . __( 'Settings', 'ccm-woo-defender' ) . '</a>';
+        array_unshift( $links, $settings_link );
+        return $links;
     }
 
     public function register_menu(): void {
