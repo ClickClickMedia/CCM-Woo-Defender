@@ -91,6 +91,8 @@ function api_request( string $method, string $url, string $cookie_file, string $
     }
 
     if ( $nonce ) {
+        // Send both header names – older WC uses X-WC-Store-API-Nonce, newer WC uses Nonce.
+        $headers[] = "Nonce: {$nonce}";
         $headers[] = "X-WC-Store-API-Nonce: {$nonce}";
     }
 
@@ -446,6 +448,9 @@ function main(): int {
 
         if ( $add_resp['code'] >= 400 ) {
             $msg = $add_resp['body']['message'] ?? 'failed to add product';
+            if ( $verbose && $add_resp['body'] ) {
+                echo c_dim( "    [add-item] HTTP {$add_resp['code']}: " . json_encode( $add_resp['body'], JSON_UNESCAPED_SLASHES ) ) . "\n";
+            }
             print_table_row( $i, $identity['email'], format_status( 'error' ), "Add-to-cart failed: {$msg}" );
             $errors++;
             @unlink( $cookie_file );
