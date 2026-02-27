@@ -25,6 +25,11 @@
 
 ---
 
+## 1.3.3 - 2026-02-27
+
+### Changed
+- Widened content container from 1100px to 1400px to prevent table overflow.
+
 ## 1.3.2 - 2026-02-27
 
 ### Fixed
