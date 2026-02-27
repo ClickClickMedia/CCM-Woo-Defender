@@ -366,6 +366,11 @@ class CCM_WD_Admin {
                                 $blocked       = ! empty( $event['blocked'] );
                                 $reasons       = (string) ( $event['reasons'] ?? '' );
 
+                                // Legacy fallback: extract GeoIP country from reasons if not stored as a field.
+                                if ( '' === $geoip_country && preg_match( '/geoip_country_(?:block|score):([A-Z]{2})/', $reasons, $geo_m ) ) {
+                                    $geoip_country = $geo_m[1];
+                                }
+
                                 // Resolve country display: show GeoIP country if available, fall back to billing country.
                                 $display_country_code = '' !== $geoip_country ? $geoip_country : $billing_country;
                                 $display_country_name = '';

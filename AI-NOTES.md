@@ -25,6 +25,22 @@
 
 ---
 
+## 1.2.2 - 2026-02-27
+
+### Objective
+
+Fix History tab Country column showing billing country instead of GeoIP country for legacy events.
+
+### Fixed
+
+- Country column now parses the GeoIP country code from the reasons string (`geoip_country_block:XX` / `geoip_country_score:XX`) as a fallback when the `geoip_country` field is empty. This correctly shows `CN`, `US`, etc. for events stored before the `geoip_country` field was added.
+
+### Why this approach
+
+- Events stored between the GeoIP feature (1.1.0) and the History tab (1.2.0) have the country only in the reasons string, not as a dedicated field. Parsing it avoids requiring a data migration.
+
+---
+
 ## 1.2.1 - 2026-02-27
 
 ### Objective
