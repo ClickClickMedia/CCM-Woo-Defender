@@ -25,6 +25,15 @@
 
 ---
 
+## 1.4.0 - 2026-03-02
+
+### Added
+- **Gateway fraud auto-detection.** Scans order notes for fraud keywords (e.g. "Gateway Rejected: fraud") and auto-blocks the IP on first detection. Keyword list is filterable via `ccm_wd_fraud_patterns`.
+
+### Fixed
+- Eliminated duplicate History rows for the same order caused by repeated `track_order_outcome` calls on each status flip.
+- Fixed orders showing both BLOCKED and ALLOWED: Store API blocked orders no longer get a second "allowed" event when the order status changes to cancelled/failed.
+
 ## 1.3.4 - 2026-02-27
 
 ### Fixed

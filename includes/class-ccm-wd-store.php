@@ -90,6 +90,40 @@ class CCM_WD_Store {
     }
 
     /**
+     * Check whether any event has already been recorded for a given order.
+     */
+    public function has_event_for_order( int $order_id ): bool {
+        if ( $order_id <= 0 ) {
+            return false;
+        }
+
+        foreach ( $this->get_events() as $event ) {
+            if ( (int) ( $event['order_id'] ?? 0 ) === $order_id ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check whether a BLOCKED event has already been recorded for a given order.
+     */
+    public function has_blocked_event_for_order( int $order_id ): bool {
+        if ( $order_id <= 0 ) {
+            return false;
+        }
+
+        foreach ( $this->get_events() as $event ) {
+            if ( (int) ( $event['order_id'] ?? 0 ) === $order_id && ! empty( $event['blocked'] ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return array<string, int>
      */
     public function get_blocks(): array {

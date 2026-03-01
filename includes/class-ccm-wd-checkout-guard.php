@@ -447,6 +447,20 @@ class CCM_WD_Checkout_Guard {
             return;
         }
 
+        // ── Gateway fraud detection (runs before duplicate check). ──
+        if ( 'failed' === $new_status && $this->detect_gateway_fraud( $order ) ) {
+            $this->handle_gateway_fraud( $order_id, $order );
+            return;
+        }
+
+        // ── Duplicate prevention. ──
+        // If we already recorded an event for this order (checkout guard
+        // or a previous outcome call), skip to avoid duplicate rows and
+        // the "blocked + allowed" inconsistency on Store API orders.
+        if ( $this->store->has_event_for_order( $order_id ) ) {
+            return;
+        }
+
         $gateway = (string) $order->get_payment_method();
         $country = (string) $order->get_billing_country();
         $total   = number_format( (float) $order->get_total(), 2, '.', '' );
@@ -490,5 +504,96 @@ class CCM_WD_Checkout_Guard {
         );
 
         $this->store->add_event( $event );
+    }
+
+    /* ────────────────────────────────────────────────────────────
+     *  Gateway fraud auto-detection
+     * ──────────────────────────────────────────────────────────── */
+
+    /**
+     * Scan order notes for fraud-related keywords added by the payment gateway.
+     *
+     * @return bool True when at least one note matches a fraud pattern.
+     */
+    private function detect_gateway_fraud( WC_Order $order ): bool {
+        if ( ! function_exists( 'wc_get_order_notes' ) ) {
+            return false;
+        }
+
+        $notes = wc_get_order_notes( array( 'order_id' => $order->get_id() ) );
+
+        /** @var string[] $patterns Filterable list of lowercase substrings that indicate gateway fraud. */
+        $patterns = (array) apply_filters( 'ccm_wd_fraud_patterns', array( 'fraud', 'risk_threshold' ) );
+
+        foreach ( $notes as $note ) {
+            $content = strtolower( (string) $note->content );
+
+            foreach ( $patterns as $pattern ) {
+                if ( false !== strpos( $content, (string) $pattern ) ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Block the customer IP and record a single BLOCKED event for gateway fraud.
+     */
+    private function handle_gateway_fraud( int $order_id, WC_Order $order ): void {
+        $ip       = (string) $order->get_customer_ip_address();
+        $settings = $this->settings->get();
+
+        // Always (re-)block the IP — extends any existing block.
+        if ( '' !== $ip ) {
+            $duration = (int) ( $settings['block_duration_hours'] ?? 24 ) * HOUR_IN_SECONDS;
+            $this->store->block_tokens( array( CCM_WD_Utils::hash_token( $ip ) ), $duration );
+        }
+
+        // Record only one fraud event per order.
+        if ( $this->store->has_blocked_event_for_order( $order_id ) ) {
+            return;
+        }
+
+        // GeoIP lookup.
+        $geo_country = '';
+        if ( '' !== $ip ) {
+            $geo_result  = $this->check_geoip_country( $ip );
+            $geo_country = $geo_result['country'];
+        }
+
+        $gateway  = (string) $order->get_payment_method();
+        $country  = (string) $order->get_billing_country();
+        $total    = number_format( (float) $order->get_total(), 2, '.', '' );
+        $email    = (string) $order->get_billing_email();
+        $name     = trim( (string) $order->get_billing_first_name() . ' ' . (string) $order->get_billing_last_name() );
+        $address1 = (string) $order->get_billing_address_1();
+        $city     = (string) $order->get_billing_city();
+        $postcode = (string) $order->get_billing_postcode();
+        $ua       = (string) $order->get_customer_user_agent();
+
+        $payment_signature = CCM_WD_Utils::normalize_text( $gateway . '|' . $total . '|' . $country );
+        $address_signature = CCM_WD_Utils::normalize_text( $address1 . '|' . $city . '|' . $postcode . '|' . $country );
+
+        $this->store->add_event( array(
+            'ts'            => CCM_WD_Utils::now(),
+            'order_id'      => $order_id,
+            'gateway'       => $gateway,
+            'country'       => $country,
+            'total'         => $total,
+            'client_ip'     => $ip,
+            'ip_hash'       => CCM_WD_Utils::hash_token( $ip ),
+            'email_hash'    => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $email ) ),
+            'name_hash'     => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $name ) ),
+            'address_hash'  => CCM_WD_Utils::hash_token( $address_signature ),
+            'ua_hash'       => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( $ua ) ),
+            'payment_hash'  => CCM_WD_Utils::hash_token( $payment_signature ),
+            'address_fake'  => CCM_WD_Utils::contains_fake_address_patterns( $address1, $city, $postcode ),
+            'blocked'       => true,
+            'score'         => 999,
+            'reasons'       => 'gateway_fraud',
+            'geoip_country' => $geo_country,
+        ) );
     }
 }
