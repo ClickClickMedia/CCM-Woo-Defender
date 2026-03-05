@@ -23,16 +23,22 @@ class CCM_WD_Analyzer {
 
         // Block tokens: identifiers stored in the block list when a visitor is
         // blocked, and checked on future attempts for `matched_existing_block`.
-        // ua_hash is deliberately EXCLUDED — User-Agent strings are shared by
-        // millions of users (same browser + OS), so blocking on ua_hash causes
-        // widespread false positives when one fraudster poisons the token.
-        // ua_hash is still used for the `same_device_multi_identity` scoring
-        // signal via build_metrics().
+        //
+        // EXCLUDED from block tokens (too coarse — shared by many users):
+        //  - ua_hash:      User-Agent strings are identical across millions of
+        //                  users running the same browser + OS.
+        //  - payment_hash: gateway + total + country is shared by every buyer
+        //                  who orders the same amount via the same gateway in
+        //                  the same country (e.g. "braintree_cc|1.00|AU").
+        //
+        // Both are still used for their respective scoring signals in
+        // build_metrics() (same_device_multi_identity and
+        // reused_gateway_amount_identity_churn) — they contribute to the
+        // score but never poison the block list.
         $matching_tokens = array(
             $context['ip_hash'] ?? '',
             $context['email_hash'] ?? '',
             $context['address_hash'] ?? '',
-            $context['payment_hash'] ?? '',
         );
 
         foreach ( $matching_tokens as $token ) {
