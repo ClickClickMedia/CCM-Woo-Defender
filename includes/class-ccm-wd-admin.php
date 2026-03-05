@@ -17,6 +17,7 @@ class CCM_WD_Admin {
         add_action( 'admin_post_ccm_wd_save_settings', array( $this, 'handle_save_settings' ) );
         add_action( 'admin_post_ccm_wd_reset_settings', array( $this, 'handle_reset_settings' ) );
         add_action( 'admin_post_ccm_wd_clear_data', array( $this, 'handle_clear_data' ) );
+        add_action( 'admin_post_ccm_wd_export_history', array( $this, 'handle_export_history' ) );
         add_action( 'wp_ajax_ccm_wd_toggle_advanced', array( $this, 'ajax_toggle_advanced' ) );
 
         // Add "Settings" link on the Plugins page.
@@ -115,6 +116,81 @@ class CCM_WD_Admin {
         $this->store->clear_events();
 
         wp_safe_redirect( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview&cleared=1' ) );
+        exit;
+    }
+
+    /**
+     * Export all history events as a CSV file download.
+     */
+    public function handle_export_history(): void {
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            wp_die( esc_html__( 'Not allowed.', 'ccm-woo-defender' ) );
+        }
+
+        check_admin_referer( 'ccm_wd_export_history' );
+
+        $events    = $this->store->get_history_events();
+        $countries = CCM_WD_GeoIP::get_all_countries();
+
+        $filename = 'woo-defender-history-' . wp_date( 'Y-m-d-His' ) . '.csv';
+
+        header( 'Content-Type: text/csv; charset=UTF-8' );
+        header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+        header( 'Pragma: no-cache' );
+        header( 'Expires: 0' );
+
+        $output = fopen( 'php://output', 'w' );
+
+        // UTF-8 BOM for Excel compatibility.
+        fwrite( $output, "\xEF\xBB\xBF" );
+
+        // Header row.
+        fputcsv( $output, array(
+            'Date/Time',
+            'Order ID',
+            'IP Address',
+            'Country Code',
+            'Country Name',
+            'Gateway',
+            'Total',
+            'Score',
+            'Status',
+            'Reasons',
+        ) );
+
+        foreach ( $events as $event ) {
+            $ts              = (int) ( $event['ts'] ?? 0 );
+            $order_id        = (int) ( $event['order_id'] ?? 0 );
+            $client_ip       = (string) ( $event['client_ip'] ?? '' );
+            $geoip_country   = (string) ( $event['geoip_country'] ?? '' );
+            $billing_country = (string) ( $event['country'] ?? '' );
+            $gateway         = (string) ( $event['gateway'] ?? '' );
+            $total_val       = (string) ( $event['total'] ?? '' );
+            $score           = (int) ( $event['score'] ?? 0 );
+            $blocked         = ! empty( $event['blocked'] );
+            $reasons         = (string) ( $event['reasons'] ?? '' );
+
+            $display_country = '' !== $geoip_country ? $geoip_country : $billing_country;
+            $country_name    = '';
+            if ( '' !== $display_country ) {
+                $country_name = $countries[ $display_country ] ?? $display_country;
+            }
+
+            fputcsv( $output, array(
+                $ts > 0 ? wp_date( 'Y-m-d H:i:s', $ts ) : '',
+                $order_id > 0 ? (string) $order_id : '',
+                $client_ip,
+                $display_country,
+                $country_name,
+                $gateway,
+                $total_val,
+                (string) $score,
+                $blocked ? 'Blocked' : 'Allowed',
+                $reasons,
+            ) );
+        }
+
+        fclose( $output );
         exit;
     }
 
@@ -263,6 +339,22 @@ class CCM_WD_Admin {
                         <?php endif; ?>
                     </td>
                 </tr>
+                <?php $white_ips = $this->settings->get_whitelisted_ips(); ?>
+                <tr>
+                    <th><?php esc_html_e( 'Whitelisted IPs', 'ccm-woo-defender' ); ?></th>
+                    <td>
+                        <?php if ( empty( $white_ips ) ) : ?>
+                            <span class="ccm-wd-text-muted"><?php esc_html_e( 'None configured', 'ccm-woo-defender' ); ?></span>
+                        <?php else : ?>
+                            <strong><?php echo esc_html( (string) count( $white_ips ) ); ?></strong>
+                            <ul class="ccm-wd-ip-list ccm-wd-ip-list-success">
+                                <?php foreach ( $white_ips as $ip ) : ?>
+                                    <li><?php echo esc_html( $ip ); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -304,8 +396,77 @@ class CCM_WD_Admin {
      * Render the History tab showing a paginated log of checkout events.
      */
     private function render_history(): void {
-        $per_page    = 30;
-        $total       = $this->store->get_events_count();
+        $per_page = 30;
+        $search   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['s'] ) ) : '';
+        $orderby  = isset( $_GET['orderby'] ) ? sanitize_key( (string) $_GET['orderby'] ) : 'date';
+        $order    = isset( $_GET['order'] ) && 'asc' === strtolower( (string) $_GET['order'] ) ? 'asc' : 'desc';
+
+        if ( ! in_array( $orderby, array( 'date', 'order', 'ip', 'country', 'gateway', 'status' ), true ) ) {
+            $orderby = 'date';
+        }
+
+        $countries  = CCM_WD_GeoIP::get_all_countries();
+        $all_events = $this->store->get_history_events();
+        $total_all  = count( $all_events );
+
+        // Search filter.
+        if ( '' !== $search ) {
+            $search_lower = strtolower( $search );
+            $all_events   = array_values( array_filter( $all_events, function ( $event ) use ( $search_lower, $countries ) {
+                $fields = array(
+                    (string) ( $event['client_ip'] ?? '' ),
+                    (string) ( $event['gateway'] ?? '' ),
+                    (string) ( $event['reasons'] ?? '' ),
+                    (string) ( $event['geoip_country'] ?? '' ),
+                    (string) ( $event['country'] ?? '' ),
+                    (string) ( $event['order_id'] ?? '' ),
+                    (string) ( $event['total'] ?? '' ),
+                    ! empty( $event['blocked'] ) ? 'blocked' : 'allowed',
+                );
+                $cc = (string) ( $event['geoip_country'] ?? '' );
+                if ( '' === $cc ) {
+                    $cc = (string) ( $event['country'] ?? '' );
+                }
+                if ( '' !== $cc && isset( $countries[ $cc ] ) ) {
+                    $fields[] = $countries[ $cc ];
+                }
+                foreach ( $fields as $field ) {
+                    if ( false !== strpos( strtolower( $field ), $search_lower ) ) {
+                        return true;
+                    }
+                }
+                return false;
+            } ) );
+        }
+
+        // Sort.
+        usort( $all_events, function ( $a, $b ) use ( $orderby, $order ) {
+            switch ( $orderby ) {
+                case 'order':
+                    $cmp = (int) ( $a['order_id'] ?? 0 ) - (int) ( $b['order_id'] ?? 0 );
+                    break;
+                case 'ip':
+                    $cmp = strcmp( (string) ( $a['client_ip'] ?? '' ), (string) ( $b['client_ip'] ?? '' ) );
+                    break;
+                case 'country':
+                    $ac  = (string) ( $a['geoip_country'] ?? $a['country'] ?? '' );
+                    $bc  = (string) ( $b['geoip_country'] ?? $b['country'] ?? '' );
+                    $cmp = strcmp( $ac, $bc );
+                    break;
+                case 'gateway':
+                    $cmp = strcmp( (string) ( $a['gateway'] ?? '' ), (string) ( $b['gateway'] ?? '' ) );
+                    break;
+                case 'status':
+                    $cmp = (int) ! empty( $a['blocked'] ) - (int) ! empty( $b['blocked'] );
+                    break;
+                default: // date
+                    $cmp = (int) ( $a['ts'] ?? 0 ) - (int) ( $b['ts'] ?? 0 );
+                    break;
+            }
+            return 'asc' === $order ? $cmp : -$cmp;
+        } );
+
+        $total       = count( $all_events );
         $total_pages = max( 1, (int) ceil( $total / $per_page ) );
         $current     = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
 
@@ -313,25 +474,72 @@ class CCM_WD_Admin {
             $current = $total_pages;
         }
 
-        // Get all events (newest first), then slice for current page.
-        $all_events = $this->store->get_history_events();
         $offset     = ( $current - 1 ) * $per_page;
         $events     = array_slice( $all_events, $offset, $per_page );
 
-        $countries = CCM_WD_GeoIP::get_all_countries();
+        $extra_args = array();
+        if ( '' !== $search ) {
+            $extra_args['s'] = $search;
+        }
+        if ( 'date' !== $orderby ) {
+            $extra_args['orderby'] = $orderby;
+        }
+        if ( 'desc' !== $order ) {
+            $extra_args['order'] = $order;
+        }
         ?>
 
         <!-- History Header -->
         <div class="ccm-wd-card">
-            <h2><?php esc_html_e( 'Checkout History', 'ccm-woo-defender' ); ?></h2>
+            <div class="ccm-wd-history-header">
+                <h2><?php esc_html_e( 'Checkout History', 'ccm-woo-defender' ); ?></h2>
+                <div class="ccm-wd-history-actions">
+                    <form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" class="ccm-wd-history-search-form">
+                        <input type="hidden" name="page" value="ccm-woo-defender" />
+                        <input type="hidden" name="tab" value="history" />
+                        <?php if ( 'date' !== $orderby ) : ?>
+                            <input type="hidden" name="orderby" value="<?php echo esc_attr( $orderby ); ?>" />
+                        <?php endif; ?>
+                        <?php if ( 'desc' !== $order ) : ?>
+                            <input type="hidden" name="order" value="<?php echo esc_attr( $order ); ?>" />
+                        <?php endif; ?>
+                        <input type="text"
+                               name="s"
+                               class="ccm-wd-history-search"
+                               placeholder="<?php esc_attr_e( 'Search history…', 'ccm-woo-defender' ); ?>"
+                               value="<?php echo esc_attr( $search ); ?>" />
+                        <button type="submit" class="ccm-wd-button ccm-wd-button-small"><?php esc_html_e( 'Search', 'ccm-woo-defender' ); ?></button>
+                        <?php if ( '' !== $search ) : ?>
+                            <a href="<?php echo esc_url( admin_url( 'admin.php?page=ccm-woo-defender&tab=history' ) ); ?>" class="ccm-wd-button ccm-wd-button-small ccm-wd-button-secondary"><?php esc_html_e( 'Clear', 'ccm-woo-defender' ); ?></a>
+                        <?php endif; ?>
+                    </form>
+                    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ccm-wd-export-form">
+                        <input type="hidden" name="action" value="ccm_wd_export_history" />
+                        <?php wp_nonce_field( 'ccm_wd_export_history' ); ?>
+                        <button type="submit" class="ccm-wd-button ccm-wd-button-small ccm-wd-button-secondary">
+                            <span class="dashicons dashicons-download" style="font-size: 14px; width: 14px; height: 14px; line-height: 1.4;"></span>
+                            <?php esc_html_e( 'Export CSV', 'ccm-woo-defender' ); ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
             <p class="ccm-wd-text-muted">
                 <?php
-                printf(
-                    /* translators: %d = total event count */
-                    esc_html__( 'Showing %1$d of %2$d recorded checkout events (newest first). Events are automatically pruned after 30 days or when exceeding 2,500 entries.', 'ccm-woo-defender' ),
-                    count( $events ),
-                    $total
-                );
+                if ( '' !== $search ) {
+                    printf(
+                        /* translators: %1$d = matched count, %2$d = total count */
+                        esc_html__( 'Found %1$d matching events out of %2$d total. Events auto-pruned after 30 days or at 2,500 entries.', 'ccm-woo-defender' ),
+                        $total,
+                        $total_all
+                    );
+                } else {
+                    printf(
+                        /* translators: %1$d = shown count, %2$d = total count */
+                        esc_html__( 'Showing %1$d of %2$d recorded checkout events. Events auto-pruned after 30 days or at 2,500 entries.', 'ccm-woo-defender' ),
+                        count( $events ),
+                        $total
+                    );
+                }
                 ?>
             </p>
 
@@ -343,21 +551,21 @@ class CCM_WD_Admin {
 
                 <!-- Pagination (top) -->
                 <?php if ( $total_pages > 1 ) : ?>
-                    <?php $this->render_pagination( $current, $total_pages ); ?>
+                    <?php $this->render_pagination( $current, $total_pages, $extra_args ); ?>
                 <?php endif; ?>
 
                 <div class="ccm-wd-history-table-wrap">
                     <table class="ccm-wd-table ccm-wd-history-table">
                         <thead>
                             <tr>
-                                <th><?php esc_html_e( 'Date / Time', 'ccm-woo-defender' ); ?></th>
-                                <th><?php esc_html_e( 'Order', 'ccm-woo-defender' ); ?></th>
-                                <th><?php esc_html_e( 'IP Address', 'ccm-woo-defender' ); ?></th>
-                                <th><?php esc_html_e( 'Country', 'ccm-woo-defender' ); ?></th>
-                                <th><?php esc_html_e( 'Gateway', 'ccm-woo-defender' ); ?></th>
+                                <?php $this->render_sortable_th( 'date', __( 'Date / Time', 'ccm-woo-defender' ), $orderby, $order, $extra_args ); ?>
+                                <?php $this->render_sortable_th( 'order', __( 'Order', 'ccm-woo-defender' ), $orderby, $order, $extra_args ); ?>
+                                <?php $this->render_sortable_th( 'ip', __( 'IP Address', 'ccm-woo-defender' ), $orderby, $order, $extra_args ); ?>
+                                <?php $this->render_sortable_th( 'country', __( 'Country', 'ccm-woo-defender' ), $orderby, $order, $extra_args ); ?>
+                                <?php $this->render_sortable_th( 'gateway', __( 'Gateway', 'ccm-woo-defender' ), $orderby, $order, $extra_args ); ?>
                                 <th><?php esc_html_e( 'Total', 'ccm-woo-defender' ); ?></th>
                                 <th><?php esc_html_e( 'Score', 'ccm-woo-defender' ); ?></th>
-                                <th><?php esc_html_e( 'Status', 'ccm-woo-defender' ); ?></th>
+                                <?php $this->render_sortable_th( 'status', __( 'Status', 'ccm-woo-defender' ), $orderby, $order, $extra_args ); ?>
                                 <th><?php esc_html_e( 'Reasons', 'ccm-woo-defender' ); ?></th>
                             </tr>
                         </thead>
@@ -485,7 +693,7 @@ class CCM_WD_Admin {
 
                 <!-- Pagination (bottom) -->
                 <?php if ( $total_pages > 1 ) : ?>
-                    <?php $this->render_pagination( $current, $total_pages ); ?>
+                    <?php $this->render_pagination( $current, $total_pages, $extra_args ); ?>
                 <?php endif; ?>
 
             <?php endif; ?>
@@ -496,8 +704,11 @@ class CCM_WD_Admin {
     /**
      * Render pagination controls for the history tab.
      */
-    private function render_pagination( int $current, int $total_pages ): void {
+    private function render_pagination( int $current, int $total_pages, array $extra_args = array() ): void {
         $base_url = admin_url( 'admin.php?page=ccm-woo-defender&tab=history' );
+        if ( ! empty( $extra_args ) ) {
+            $base_url = add_query_arg( $extra_args, $base_url );
+        }
         ?>
         <div class="ccm-wd-pagination">
             <?php if ( $current > 1 ) : ?>
@@ -524,6 +735,35 @@ class CCM_WD_Admin {
             <?php endif; ?>
         </div>
         <?php
+    }
+
+    /**
+     * Render a sortable column header for the history table.
+     */
+    private function render_sortable_th( string $column, string $label, string $current_orderby, string $current_order, array $extra_args ): void {
+        $is_active  = $column === $current_orderby;
+        $next_order = ( $is_active && 'asc' === $current_order ) ? 'desc' : 'asc';
+        $arrow      = '';
+
+        if ( $is_active ) {
+            $arrow = 'asc' === $current_order ? ' &#9650;' : ' &#9660;';
+        }
+
+        $url_args = array_merge( $extra_args, array(
+            'orderby' => $column,
+            'order'   => $next_order,
+        ) );
+
+        $url   = add_query_arg( $url_args, admin_url( 'admin.php?page=ccm-woo-defender&tab=history' ) );
+        $class = 'ccm-wd-sortable' . ( $is_active ? ' ccm-wd-sorted' : '' );
+
+        printf(
+            '<th class="%s"><a href="%s">%s%s</a></th>',
+            esc_attr( $class ),
+            esc_url( $url ),
+            esc_html( $label ),
+            $arrow // Already HTML entities.
+        );
     }
 
     /**
@@ -776,6 +1016,19 @@ class CCM_WD_Admin {
                         <p class="ccm-wd-text-muted"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses are always blocked at checkout before scoring.', 'ccm-woo-defender' ); ?></p>
                     </div>
                     <textarea name="ccm_wd_settings[manual_blocked_ips]" rows="5" class="ccm-wd-textarea"><?php echo esc_textarea( (string) ( $settings['manual_blocked_ips'] ?? '' ) ); ?></textarea>
+                </div>
+            </div>
+
+            <!-- Whitelisted IPs Card -->
+            <div class="ccm-wd-card">
+                <h2><?php esc_html_e( 'Whitelisted IPs', 'ccm-woo-defender' ); ?></h2>
+                <p class="ccm-wd-text-muted"><?php esc_html_e( 'IP addresses that should always be allowed through checkout without any fraud checks.', 'ccm-woo-defender' ); ?></p>
+                <div class="ccm-wd-setting-row" style="flex-direction: column;">
+                    <div class="ccm-wd-setting-info">
+                        <strong><?php esc_html_e( 'Whitelisted IP List', 'ccm-woo-defender' ); ?></strong>
+                        <p class="ccm-wd-text-muted"><?php esc_html_e( 'One IP per line (IPv4 or IPv6). These addresses bypass all fraud detection — orders from these IPs are always allowed.', 'ccm-woo-defender' ); ?></p>
+                    </div>
+                    <textarea name="ccm_wd_settings[whitelisted_ips]" rows="5" class="ccm-wd-textarea"><?php echo esc_textarea( (string) ( $settings['whitelisted_ips'] ?? '' ) ); ?></textarea>
                 </div>
             </div>
 

@@ -1341,6 +1341,93 @@
 	font-weight: 500;
 }
 
+/* ===================================
+   History Toolbar (Search + Export)
+   =================================== */
+.ccm-wd-history-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--ccm-wd-space-md);
+}
+
+.ccm-wd-history-header h2 {
+	margin-bottom: 0;
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.ccm-wd-history-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--ccm-wd-space-sm);
+}
+
+.ccm-wd-history-search-form {
+	display: flex;
+	align-items: center;
+	gap: var(--ccm-wd-space-xs);
+}
+
+.ccm-wd-history-search {
+	padding: 5px 12px;
+	font-size: var(--ccm-wd-text-sm);
+	border: 1px solid var(--ccm-wd-border);
+	border-radius: var(--ccm-wd-radius-md);
+	background: var(--ccm-wd-surface);
+	color: var(--ccm-wd-text);
+	min-width: 200px;
+	transition: border-color var(--ccm-wd-transition);
+}
+
+.ccm-wd-history-search:focus {
+	outline: none;
+	border-color: var(--ccm-wd-primary);
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, .15);
+}
+
+.ccm-wd-export-form {
+	display: inline-flex;
+}
+
+/* ===================================
+   Sortable Table Headers
+   =================================== */
+.ccm-wd-sortable a {
+	color: var(--ccm-wd-text-inverse);
+	text-decoration: none;
+	white-space: nowrap;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	transition: opacity var(--ccm-wd-transition-fast);
+}
+
+.ccm-wd-sortable a:hover {
+	opacity: 0.8;
+	text-decoration: none;
+	color: var(--ccm-wd-text-inverse);
+}
+
+.ccm-wd-sorted a {
+	color: var(--ccm-wd-primary-light);
+}
+
+.ccm-wd-sorted a:hover {
+	color: var(--ccm-wd-primary-light);
+}
+
+/* ===================================
+   IP Whitelist Success Variant
+   =================================== */
+.ccm-wd-ip-list-success li {
+	background: var(--ccm-wd-success-bg);
+	color: var(--ccm-wd-success);
+	border-color: var(--ccm-wd-success);
+}
+
 /* History responsive */
 @media screen and (max-width: 960px) {
 	.ccm-wd-history-table {
@@ -1359,5 +1446,24 @@
 
 	.ccm-wd-history-reasons {
 		max-width: 160px;
+	}
+
+	.ccm-wd-history-header {
+		flex-direction: column;
+	}
+
+	.ccm-wd-history-actions {
+		flex-direction: column;
+		align-items: stretch;
+		width: 100%;
+	}
+
+	.ccm-wd-history-search-form {
+		flex-wrap: wrap;
+	}
+
+	.ccm-wd-history-search {
+		min-width: 0;
+		flex: 1;
 	}
 }

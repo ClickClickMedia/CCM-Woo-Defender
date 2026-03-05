@@ -39,6 +39,11 @@ class CCM_WD_Checkout_Guard {
 
         $client_ip = CCM_WD_Utils::get_client_ip();
 
+        // Whitelisted IPs always pass through.
+        if ( $this->settings->is_ip_whitelisted( $client_ip ) ) {
+            return;
+        }
+
         if ( $this->settings->is_ip_manually_blocked( $client_ip ) ) {
             wc_add_notice(
                 (string) apply_filters(
@@ -72,6 +77,12 @@ class CCM_WD_Checkout_Guard {
         }
 
         $client_ip = CCM_WD_Utils::get_client_ip();
+
+        // Whitelisted IPs always pass through without scoring.
+        if ( $this->settings->is_ip_whitelisted( $client_ip ) ) {
+            return;
+        }
+
         if ( $this->settings->is_ip_manually_blocked( $client_ip ) ) {
             $errors->add(
                 'ccm_wd_manual_ip_blocked',
@@ -192,6 +203,11 @@ class CCM_WD_Checkout_Guard {
         );
 
         $client_ip = CCM_WD_Utils::get_client_ip();
+
+        // --- Whitelisted IPs always pass through ---
+        if ( $this->settings->is_ip_whitelisted( $client_ip ) ) {
+            return;
+        }
 
         // --- Manual IP block ---
         if ( $this->settings->is_ip_manually_blocked( $client_ip ) ) {

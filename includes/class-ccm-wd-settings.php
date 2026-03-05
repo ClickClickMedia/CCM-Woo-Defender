@@ -102,6 +102,8 @@ class CCM_WD_Settings {
             'geoip_weight'                             => 80,        // Risk score added when action = 'score'.
             'geoip_blocked_countries'                  => array(),   // Array of ISO codes to block/penalise.
             'geoip_log_only'                           => false,     // Log country without blocking (dry-run mode).
+            // IP Whitelist.
+            'whitelisted_ips'                          => '',
         );
     }
 
@@ -145,6 +147,8 @@ class CCM_WD_Settings {
             'geoip_weight'                             => $this->bounded_int( $raw['geoip_weight'] ?? $defaults['geoip_weight'], 10, 200 ),
             'geoip_blocked_countries'                  => $this->sanitize_country_list( $raw['geoip_blocked_countries'] ?? $defaults['geoip_blocked_countries'] ),
             'geoip_log_only'                           => ! empty( $raw['geoip_log_only'] ),
+            // IP Whitelist.
+            'whitelisted_ips'                          => $this->sanitize_ip_list_text( (string) ( $raw['whitelisted_ips'] ?? $defaults['whitelisted_ips'] ) ),
         );
     }
 
@@ -189,6 +193,41 @@ class CCM_WD_Settings {
         }
 
         return in_array( $ip, $this->get_manual_blocked_ips(), true );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function get_whitelisted_ips(): array {
+        $settings = $this->get();
+        $raw      = (string) ( $settings['whitelisted_ips'] ?? '' );
+
+        if ( '' === trim( $raw ) ) {
+            return array();
+        }
+
+        $items = preg_split( '/[\r\n,]+/', $raw ) ?: array();
+        $ips   = array();
+
+        foreach ( $items as $item ) {
+            $ip = trim( $item );
+
+            if ( '' === $ip || ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+                continue;
+            }
+
+            $ips[ $ip ] = true;
+        }
+
+        return array_keys( $ips );
+    }
+
+    public function is_ip_whitelisted( string $ip ): bool {
+        if ( '' === $ip ) {
+            return false;
+        }
+
+        return in_array( $ip, $this->get_whitelisted_ips(), true );
     }
 
     /**
