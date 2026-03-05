@@ -186,7 +186,7 @@ class CCM_WD_Admin {
                 $total_val,
                 (string) $score,
                 $blocked ? 'Blocked' : 'Allowed',
-                $reasons,
+                implode( ', ', array_map( array( $this, 'friendly_reason' ), array_filter( array_map( 'trim', explode( ',', $reasons ) ) ) ) ),
             ) );
         }
 
@@ -269,6 +269,39 @@ class CCM_WD_Admin {
 
         </div>
         <?php
+    }
+
+    /**
+     * Map a raw reason slug to a human-readable label for the History table.
+     */
+    private function friendly_reason( string $slug ): string {
+        static $map = array(
+            'matched_existing_block'                    => 'Existing block match',
+            'suspicious_address'                        => 'Suspicious address',
+            'reused_gateway_amount_identity_churn'      => 'Gateway+amount churn',
+            'same_ip_multi_identity'                    => 'IP identity churn',
+            'same_device_multi_identity'                => 'Device churn (legacy)',
+            'repeat_after_blocks'                       => 'Repeat after block',
+            'gateway_fraud'                             => 'Gateway fraud',
+            'manual_ip_block'                           => 'Manual IP block',
+            'order_failed'                              => 'Order failed',
+            'order_cancelled'                           => 'Order cancelled',
+        );
+
+        // Direct match.
+        if ( isset( $map[ $slug ] ) ) {
+            return $map[ $slug ];
+        }
+
+        // GeoIP reasons: geoip_country_block:XX or geoip_country_score:XX.
+        if ( 0 === strpos( $slug, 'geoip_country_block:' ) ) {
+            return 'GeoIP block: ' . substr( $slug, 20 );
+        }
+        if ( 0 === strpos( $slug, 'geoip_country_score:' ) ) {
+            return 'GeoIP risk: ' . substr( $slug, 20 );
+        }
+
+        return $slug;
     }
 
     /**
@@ -366,12 +399,12 @@ class CCM_WD_Admin {
                 <div>
                     <p><strong><?php esc_html_e( 'Simple version:', 'ccm-woo-defender' ); ?></strong></p>
                     <ol>
-                        <li><?php esc_html_e( 'At checkout, Defender creates a privacy-safe fingerprint from non-sensitive patterns such as payment method, amount, country, IP/device consistency, and address quality. Raw personal data is not stored.', 'ccm-woo-defender' ); ?></li>
-                        <li><?php esc_html_e( 'It compares this attempt with recent checkout history to detect fraud-style behavior, for example: same gateway + same amount with many different identities, same IP with multiple addresses, or repeated attempts after previous blocks.', 'ccm-woo-defender' ); ?></li>
-                        <li><?php esc_html_e( 'Each signal adds to a risk score. If the score reaches your configured threshold, checkout is stopped immediately and related fingerprints are temporarily blocked.', 'ccm-woo-defender' ); ?></li>
-                        <li><?php esc_html_e( 'Defender also learns from failed and cancelled orders, so detection improves over time for your specific abuse patterns.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'At checkout, Defender creates privacy-safe fingerprints from non-sensitive patterns such as IP address, billing address quality, payment method, order amount, and country. Raw personal data is never stored.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'It compares this attempt with recent checkout history to detect fraud-style behavior — for example: same gateway + same amount with many different identities, same IP with multiple addresses, suspicious address patterns, or repeated attempts after previous blocks.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'Each signal adds to a risk score. If the score exceeds your configured threshold, checkout is stopped immediately and related fingerprints (IP, email, address) are temporarily blocked.', 'ccm-woo-defender' ); ?></li>
+                        <li><?php esc_html_e( 'Defender also auto-detects gateway-reported fraud on completed orders (e.g. "Gateway Rejected: fraud"), learns from failed and cancelled orders, and supports GeoIP country blocking and manual IP block/whitelist controls.', 'ccm-woo-defender' ); ?></li>
                     </ol>
-                    <p><strong><?php esc_html_e( 'Why this works better than basic rate limiting:', 'ccm-woo-defender' ); ?></strong> <?php esc_html_e( 'Many attackers deliberately spread attempts over time to bypass burst limits. Defender focuses on correlated fraud fingerprints and identity churn, which remain visible even when attempts are sporadic.', 'ccm-woo-defender' ); ?></p>
+                    <p><strong><?php esc_html_e( 'Why this works better than basic rate limiting:', 'ccm-woo-defender' ); ?></strong> <?php esc_html_e( 'Many attackers deliberately spread attempts over time to bypass burst limits. Defender focuses on correlated fraud fingerprints — IP, email, and address patterns — plus identity churn, which remain visible even when attempts are sporadic.', 'ccm-woo-defender' ); ?></p>
                 </div>
             </div>
             <p class="ccm-wd-text-muted"><?php esc_html_e( 'Tip: Keep protection enabled and tune threshold/weights in Settings to reduce false positives.', 'ccm-woo-defender' ); ?></p>
@@ -593,6 +626,7 @@ class CCM_WD_Admin {
 
                                 // Format reasons into readable tags.
                                 $reason_tags = array_filter( array_map( 'trim', explode( ',', $reasons ) ) );
+                                $reason_tags = array_map( array( $this, 'friendly_reason' ), $reason_tags );
                                 ?>
                                 <tr class="<?php echo $blocked ? 'ccm-wd-row-blocked' : 'ccm-wd-row-allowed'; ?>">
                                     <td class="ccm-wd-history-date">

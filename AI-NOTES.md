@@ -25,6 +25,12 @@
 
 ---
 
+## 1.6.1 - 2025-06-24
+
+### Changed
+- **Overview "How it works" rewritten** to accurately describe current detection signals (no more device fingerprinting references). Now mentions GeoIP country blocking, gateway fraud auto-detection, manual IP controls, and the specific block token types (IP, email, address).
+- **Friendly reason labels** in History table and CSV exports. Raw slugs like `matched_existing_block` now display as "Existing block match", `geoip_country_block:BR` as "GeoIP block: BR", etc. Legacy `same_device_multi_identity` entries from older versions show as "Device churn (legacy)".
+
 ## 1.6.0 - 2025-06-24
 
 ### Fixed
