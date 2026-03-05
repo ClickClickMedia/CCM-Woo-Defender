@@ -20,11 +20,18 @@ class CCM_WD_Analyzer {
         $effective       = $this->settings->get_effective_detection_settings();
         $score           = 0;
         $reasons         = array();
+
+        // Block tokens: identifiers stored in the block list when a visitor is
+        // blocked, and checked on future attempts for `matched_existing_block`.
+        // ua_hash is deliberately EXCLUDED — User-Agent strings are shared by
+        // millions of users (same browser + OS), so blocking on ua_hash causes
+        // widespread false positives when one fraudster poisons the token.
+        // ua_hash is still used for the `same_device_multi_identity` scoring
+        // signal via build_metrics().
         $matching_tokens = array(
             $context['ip_hash'] ?? '',
             $context['email_hash'] ?? '',
             $context['address_hash'] ?? '',
-            $context['ua_hash'] ?? '',
             $context['payment_hash'] ?? '',
         );
 
