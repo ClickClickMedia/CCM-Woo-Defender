@@ -60,6 +60,25 @@ class CCM_WD_Plugin {
         $this->admin    = new CCM_WD_Admin( $this->store, $this->settings );
         $this->guard->register_hooks();
         $this->admin->register_hooks();
+
+        $this->maybe_upgrade();
+    }
+
+    /**
+     * Run one-time upgrade routines when the plugin version changes.
+     */
+    private function maybe_upgrade(): void {
+        $stored_version = get_option( 'ccm_wd_db_version', '0' );
+
+        if ( version_compare( $stored_version, '1.6.0', '<' ) ) {
+            // v1.6.0: purge all block tokens — earlier versions stored ua_hash and
+            // payment_hash tokens that cause cascading false positives.
+            $this->store->clear_blocks();
+        }
+
+        if ( $stored_version !== CCM_WD_VERSION ) {
+            update_option( 'ccm_wd_db_version', CCM_WD_VERSION, true );
+        }
     }
 
     private function is_woocommerce_active(): bool {

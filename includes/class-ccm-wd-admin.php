@@ -115,7 +115,7 @@ class CCM_WD_Admin {
         $this->store->clear_blocks();
         $this->store->clear_events();
 
-        wp_safe_redirect( admin_url( 'admin.php?page=ccm-woo-defender&tab=overview&cleared=1' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=ccm-woo-defender&tab=settings&cleared=1' ) );
         exit;
     }
 
@@ -377,18 +377,6 @@ class CCM_WD_Admin {
             <p class="ccm-wd-text-muted"><?php esc_html_e( 'Tip: Keep protection enabled and tune threshold/weights in Settings to reduce false positives.', 'ccm-woo-defender' ); ?></p>
         </div>
 
-        <!-- Data Management -->
-        <div class="ccm-wd-card">
-            <h2><?php esc_html_e( 'Data Management', 'ccm-woo-defender' ); ?></h2>
-            <p><?php esc_html_e( 'Clear all tracked checkout events and active block tokens. This cannot be undone.', 'ccm-woo-defender' ); ?></p>
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-                <input type="hidden" name="action" value="ccm_wd_clear_data" />
-                <?php wp_nonce_field( 'ccm_wd_clear_data' ); ?>
-                <button type="submit" class="ccm-wd-button ccm-wd-button-danger" onclick="return confirm('<?php echo esc_js( __( 'Clear all Woo Defender data? This cannot be undone.', 'ccm-woo-defender' ) ); ?>');">
-                    <?php esc_html_e( 'Clear Woo Defender Data', 'ccm-woo-defender' ); ?>
-                </button>
-            </form>
-        </div>
         <?php
     }
 
@@ -903,17 +891,6 @@ class CCM_WD_Admin {
                 <div class="ccm-wd-setting-row">
                     <div class="ccm-wd-setting-info">
                         <strong>
-                            <?php esc_html_e( 'Same device identity churn', 'ccm-woo-defender' ); ?>
-                            <button type="button" class="ccm-wd-info-btn" data-modal="weight_device_identity_churn" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
-                        </strong>
-                    </div>
-                    <div class="ccm-wd-setting-control">
-                        <input type="number" min="0" max="100" name="ccm_wd_settings[weight_device_identity_churn]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['weight_device_identity_churn'] ); ?>" />
-                    </div>
-                </div>
-                <div class="ccm-wd-setting-row">
-                    <div class="ccm-wd-setting-info">
-                        <strong>
                             <?php esc_html_e( 'Repeat-after-blocks', 'ccm-woo-defender' ); ?>
                             <button type="button" class="ccm-wd-info-btn" data-modal="weight_repeat_after_blocks" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
                         </strong>
@@ -966,28 +943,6 @@ class CCM_WD_Admin {
                     </div>
                     <div class="ccm-wd-setting-control">
                         <input type="number" min="2" max="20" name="ccm_wd_settings[ip_identity_min_unique_addresses]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['ip_identity_min_unique_addresses'] ); ?>" />
-                    </div>
-                </div>
-                <div class="ccm-wd-setting-row">
-                    <div class="ccm-wd-setting-info">
-                        <strong>
-                            <?php esc_html_e( 'Same device min attempts', 'ccm-woo-defender' ); ?>
-                            <button type="button" class="ccm-wd-info-btn" data-modal="device_identity_min_attempts" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
-                        </strong>
-                    </div>
-                    <div class="ccm-wd-setting-control">
-                        <input type="number" min="2" max="30" name="ccm_wd_settings[device_identity_min_attempts]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_attempts'] ); ?>" />
-                    </div>
-                </div>
-                <div class="ccm-wd-setting-row">
-                    <div class="ccm-wd-setting-info">
-                        <strong>
-                            <?php esc_html_e( 'Same device min unique emails', 'ccm-woo-defender' ); ?>
-                            <button type="button" class="ccm-wd-info-btn" data-modal="device_identity_min_unique_emails" title="<?php esc_attr_e( 'More info', 'ccm-woo-defender' ); ?>"><span class="dashicons dashicons-info-outline"></span></button>
-                        </strong>
-                    </div>
-                    <div class="ccm-wd-setting-control">
-                        <input type="number" min="2" max="20" name="ccm_wd_settings[device_identity_min_unique_emails]" class="ccm-wd-number-input" value="<?php echo esc_attr( (string) $settings['device_identity_min_unique_emails'] ); ?>" />
                     </div>
                 </div>
                 <div class="ccm-wd-setting-row">
@@ -1060,6 +1015,19 @@ class CCM_WD_Admin {
                 </button>
             </div>
         </form>
+
+        <!-- Data Management -->
+        <div class="ccm-wd-card" style="margin-top: 2rem; border-color: #d63638;">
+            <h2><?php esc_html_e( 'Data Management', 'ccm-woo-defender' ); ?></h2>
+            <p><?php esc_html_e( 'Clear all tracked checkout events and active block tokens. This cannot be undone.', 'ccm-woo-defender' ); ?></p>
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <input type="hidden" name="action" value="ccm_wd_clear_data" />
+                <?php wp_nonce_field( 'ccm_wd_clear_data' ); ?>
+                <button type="submit" class="ccm-wd-button ccm-wd-button-danger" onclick="return confirm('<?php echo esc_js( __( 'Clear all Woo Defender data? This cannot be undone.', 'ccm-woo-defender' ) ); ?>');">
+                    <?php esc_html_e( 'Clear Woo Defender Data', 'ccm-woo-defender' ); ?>
+                </button>
+            </form>
+        </div>
         <?php
     }
 

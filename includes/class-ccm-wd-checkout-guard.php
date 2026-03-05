@@ -53,6 +53,27 @@ class CCM_WD_Checkout_Guard {
                 'error'
             );
 
+            // Log the manual block so it appears in history.
+            $this->store->add_event( array(
+                'ts'            => CCM_WD_Utils::now(),
+                'order_id'      => 0,
+                'gateway'       => '',
+                'country'       => '',
+                'total'         => '0.00',
+                'client_ip'     => $client_ip,
+                'ip_hash'       => CCM_WD_Utils::hash_token( $client_ip ),
+                'email_hash'    => '',
+                'name_hash'     => '',
+                'address_hash'  => '',
+                'ua_hash'       => CCM_WD_Utils::hash_token( CCM_WD_Utils::normalize_text( CCM_WD_Utils::get_user_agent() ) ),
+                'payment_hash'  => '',
+                'address_fake'  => false,
+                'blocked'       => true,
+                'score'         => 999,
+                'reasons'       => 'manual_ip_block',
+                'geoip_country' => '',
+            ) );
+
             $this->request_already_blocked = true;
             return;
         }

@@ -25,6 +25,35 @@
 
 ---
 
+## 1.6.0 - 2025-06-24
+
+### Fixed
+- **Eliminated same-device identity churn signal.** The `same_device_multi_identity` scoring check used User-Agent hashes as a device fingerprint — UA strings are shared by millions of users and caused cascading false positives. Signal removed entirely; `same_ip_multi_identity` provides equivalent coverage using a more reliable identifier.
+- **Fixed blocked_attempts_recent matching.** The repeat-after-blocks counter previously matched visitors by `ua_hash`, which is coarse and shared. Now matches only by `ip_hash` and `email_hash`.
+- **Manual IP blocks now logged to history.** `checkout_process_guard()` was blocking manually-listed IPs but skipping event logging, making those blocks invisible in the History tab. Now logs a `manual_ip_block` event with score 999.
+
+### Changed
+- **Auto-purge block tokens on upgrade.** On first load after upgrading to 1.6.0, all stored block tokens are cleared to remove contaminated `ua_hash` and `payment_hash` entries from earlier versions.
+- Removed "Same device identity churn" weight, "Same device min attempts", and "Same device min unique emails" fields from the Advanced Detection Controls UI (settings keys kept for backward compatibility).
+
+## 1.5.2 - 2025-06-23
+
+### Fixed
+- Removed `payment_hash` from block/matching tokens. The `gateway + total + country` signature (e.g. "braintree_cc|1.00|AU") is too coarse — legitimate users sharing the same payment profile were being blocked.
+
+## 1.5.1 - 2025-06-23
+
+### Fixed
+- Removed `ua_hash` from matching tokens in the analyzer. User-Agent strings are shared across millions of users and caused cascading false positives.
+
+## 1.5.0 - 2025-06-23
+
+### Added
+- **IP Whitelist.** Whitelisted IPs always pass through checkout without scoring. Managed from the Settings tab.
+- **History export/download.** CSV export of the full event history from the History tab.
+- **History search.** Filter history by IP, email hash, gateway, country, or reasons.
+- **Table column sorting.** Clickable column headers in the History tab for client-side sorting.
+
 ## 1.4.0 - 2026-03-02
 
 ### Added

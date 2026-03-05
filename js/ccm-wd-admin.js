@@ -33,11 +33,6 @@
             body:  '<p>Points added when multiple checkout attempts come from the same IP address but with different billing details (names, emails, addresses).</p>' +
                    '<p>Legitimate buyers rarely submit many different identities from one IP in a short time.</p>'
         },
-        weight_device_identity_churn: {
-            title: 'Same Device Identity Churn Weight',
-            body:  '<p>Points added when the same browser/device fingerprint is used across checkout attempts with different billing identities.</p>' +
-                   '<p>Even if the attacker rotates IPs (e.g. via proxy), the device fingerprint often stays stable.</p>'
-        },
         weight_repeat_after_blocks: {
             title: 'Repeat-After-Blocks Weight',
             body:  '<p>Points added when a visitor keeps attempting checkout after they have already been blocked at least once.</p>' +
@@ -62,16 +57,6 @@
             title: 'Same IP Min Unique Addresses',
             body:  '<p>The minimum number of distinct billing addresses from a single IP before the signal fires.</p>' +
                    '<p>One person trying multiple cards often uses the same address; many different addresses from one IP is highly suspicious.</p>'
-        },
-        device_identity_min_attempts: {
-            title: 'Same Device Min Attempts',
-            body:  '<p>How many checkout attempts from the same device fingerprint must be seen before the device identity-churn signal can activate.</p>' +
-                   '<p>A higher value requires more attempts before flagging, reducing false positives from shared devices.</p>'
-        },
-        device_identity_min_unique_emails: {
-            title: 'Same Device Min Unique Emails',
-            body:  '<p>The minimum number of distinct email addresses from a single device fingerprint before the churn signal fires.</p>' +
-                   '<p>Multiple emails from the same browser session is a strong indicator of automated abuse.</p>'
         },
         repeat_after_blocks_min_attempts: {
             title: 'Repeat-After-Blocks Min Attempts',

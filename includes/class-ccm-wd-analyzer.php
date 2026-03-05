@@ -21,20 +21,17 @@ class CCM_WD_Analyzer {
         $score           = 0;
         $reasons         = array();
 
-        // Block tokens: identifiers stored in the block list when a visitor is
-        // blocked, and checked on future attempts for `matched_existing_block`.
+        // ── Block tokens ────────────────────────────────────────
+        // Only genuinely unique identifiers are stored as block
+        // tokens and checked for `matched_existing_block`.
         //
-        // EXCLUDED from block tokens (too coarse — shared by many users):
-        //  - ua_hash:      User-Agent strings are identical across millions of
-        //                  users running the same browser + OS.
-        //  - payment_hash: gateway + total + country is shared by every buyer
-        //                  who orders the same amount via the same gateway in
-        //                  the same country (e.g. "braintree_cc|1.00|AU").
+        // EXCLUDED (too coarse – shared across many unrelated users):
+        //  • ua_hash      – same browser + OS = identical string.
+        //  • payment_hash – gateway + total + country = any buyer
+        //                   with the same cart value matches.
         //
-        // Both are still used for their respective scoring signals in
-        // build_metrics() (same_device_multi_identity and
-        // reused_gateway_amount_identity_churn) — they contribute to the
-        // score but never poison the block list.
+        // Both were removed in v1.5.1 / v1.5.2 after they caused
+        // cascading false-positive blocks.
         $matching_tokens = array(
             $context['ip_hash'] ?? '',
             $context['email_hash'] ?? '',
@@ -68,11 +65,6 @@ class CCM_WD_Analyzer {
             $reasons[] = 'same_ip_multi_identity';
         }
 
-        if ( $metrics['same_ua_attempts'] >= (int) $effective['device_identity_min_attempts'] && $metrics['same_ua_unique_emails'] >= (int) $effective['device_identity_min_unique_emails'] ) {
-            $score    += (int) $effective['weight_device_identity_churn'];
-            $reasons[] = 'same_device_multi_identity';
-        }
-
         if ( $metrics['blocked_attempts_recent'] >= (int) $effective['repeat_after_blocks_min_attempts'] ) {
             $score    += (int) $effective['weight_repeat_after_blocks'];
             $reasons[] = 'repeat_after_blocks';
@@ -101,23 +93,19 @@ class CCM_WD_Analyzer {
         $same_ip_unique_addresses    = array();
         $same_payment_attempts       = 0;
         $same_payment_unique_emails  = array();
-        $same_ua_attempts            = 0;
-        $same_ua_unique_emails       = array();
         $blocked_attempts_recent     = 0;
 
         $ctx_ip      = (string) ( $context['ip_hash'] ?? '' );
         $ctx_email   = (string) ( $context['email_hash'] ?? '' );
-        $ctx_ua      = (string) ( $context['ua_hash'] ?? '' );
 
         foreach ( $events as $event ) {
             $event_ip      = (string) ( $event['ip_hash'] ?? '' );
             $event_addr    = (string) ( $event['address_hash'] ?? '' );
             $event_payment = (string) ( $event['payment_hash'] ?? '' );
             $event_email   = (string) ( $event['email_hash'] ?? '' );
-            $event_ua      = (string) ( $event['ua_hash'] ?? '' );
             $event_blocked = ! empty( $event['blocked'] );
 
-            if ( $event_ip !== '' && $event_ip === (string) ( $context['ip_hash'] ?? '' ) ) {
+            if ( $event_ip !== '' && $event_ip === $ctx_ip ) {
                 ++$same_ip_attempts;
                 if ( '' !== $event_addr ) {
                     $same_ip_unique_addresses[ $event_addr ] = true;
@@ -131,22 +119,17 @@ class CCM_WD_Analyzer {
                 }
             }
 
-            if ( $event_ua !== '' && $event_ua === (string) ( $context['ua_hash'] ?? '' ) ) {
-                ++$same_ua_attempts;
-                if ( '' !== $event_email ) {
-                    $same_ua_unique_emails[ $event_email ] = true;
-                }
-            }
-
-            // Only count blocks related to the current visitor (matched by IP, email, or UA).
+            // Count blocked attempts related to the current visitor.
+            // Match only by IP or email — these are unique enough to
+            // attribute prior blocks to the same person.  ua_hash was
+            // removed because it matched across millions of unrelated
+            // users sharing the same browser + OS string.
             if ( $event_blocked ) {
                 $matches_visitor = false;
 
                 if ( $ctx_ip !== '' && $event_ip === $ctx_ip ) {
                     $matches_visitor = true;
                 } elseif ( $ctx_email !== '' && $event_email === $ctx_email ) {
-                    $matches_visitor = true;
-                } elseif ( $ctx_ua !== '' && $event_ua === $ctx_ua ) {
                     $matches_visitor = true;
                 }
 
@@ -161,8 +144,6 @@ class CCM_WD_Analyzer {
             'same_ip_unique_addresses'    => count( $same_ip_unique_addresses ),
             'same_payment_attempts'       => $same_payment_attempts,
             'same_payment_unique_emails'  => count( $same_payment_unique_emails ),
-            'same_ua_attempts'            => $same_ua_attempts,
-            'same_ua_unique_emails'       => count( $same_ua_unique_emails ),
             'blocked_attempts_recent'     => $blocked_attempts_recent,
         );
     }
