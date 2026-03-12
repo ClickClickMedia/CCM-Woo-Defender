@@ -134,6 +134,11 @@ class CCM_WD_Admin {
 
         $filename = 'woo-defender-history-' . wp_date( 'Y-m-d-His' ) . '.csv';
 
+        // Clean any output buffers so download headers are sent correctly.
+        while ( ob_get_level() ) {
+            ob_end_clean();
+        }
+
         header( 'Content-Type: text/csv; charset=UTF-8' );
         header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
         header( 'Pragma: no-cache' );

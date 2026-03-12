@@ -25,6 +25,13 @@
 
 ---
 
+## 1.6.2 - 2026-03-13
+
+### Fixed
+- **CSV export opening in browser instead of downloading.** WordPress output buffers were preventing the `Content-Disposition: attachment` header from reaching the browser. The export handler now flushes all open output buffers before sending download headers.
+
+---
+
 ## 1.6.1 - 2025-06-24
 
 ### Changed
